@@ -918,15 +918,6 @@ export default function Home() {
   const objectives = store.data?.objectives || [];
   const savedFilters = store.data?.savedFilters || [];
 
-  const update = (patch) => {
-    const currentData = store.data || {};
-    console.log("[update] Current data:", currentData);
-    console.log("[update] Patch:", patch);
-    const newData = { ...currentData, ...patch };
-    console.log("[update] New data:", newData);
-    store.save(newData);
-  };
-
   const [section, setSection] = useState("portage");
   const [tab, setTab] = useState("ai");
   const [search, setSearch] = useState(""); const [filterStatus, setFilterStatus] = useState("Tous");
@@ -945,7 +936,13 @@ export default function Home() {
     if (!store.loaded) return;
     const next = { ...rows }; let ch = false;
     for (const s of Object.keys(themes)) { const a = themes[s]; if (!Array.isArray(a)) continue; for (const t of a) { if (!next[t.id]) { next[t.id] = []; ch = true; } } }
-    if (ch) update({ rows: next });
+    if (ch) {
+      const newData = {
+        ...store.data,
+        rows: next
+      };
+      store.save(newData);
+    }
   }, [themes, store.loaded]);
 
   const curTheme = resolveTheme(themes, section, tab);
@@ -969,40 +966,56 @@ export default function Home() {
 
   const dupCount = curRows.filter(r => isDupFn(r)).length;
 
-  const logActivity = (action) => {
-    const entry = { date: new Date().toISOString(), action };
-    const log = [...(store.data?.activityLog || []), entry].slice(-100);
-    update({ activityLog: log });
-  };
-
-  const addRow = useCallback(() => {
+  const addRow = () => {
     if (!activeId) {
-      alert("Sélectionnez une thématique d'abord");
+      alert("Sélectionnez une thématique");
       return;
     }
-    console.log("Adding row to theme:", activeId);
-    const newRows = [...(rows[activeId]||[]), makeRow()];
-    const entry = { date: new Date().toISOString(), action: `Nouvelle ligne ajoutée dans ${curTheme?.label}` };
-    const log = [...(store.data?.activityLog || []), entry].slice(-100);
-    // Combine both updates into one
-    update({ 
-      rows: { ...rows, [activeId]: newRows },
-      activityLog: log
-    });
-    setTimeout(() => { if (tableRef.current) tableRef.current.scrollTop = tableRef.current.scrollHeight; }, 100);
-  }, [activeId, rows, curTheme?.label, store.data?.activityLog]);
+    // Get current rows for this theme
+    const currentRows = store.data?.rows?.[activeId] || [];
+    // Create new row
+    const newRow = makeRow();
+    // Add to list
+    const updatedRows = [...currentRows, newRow];
+    // Save everything
+    const newData = {
+      ...store.data,
+      rows: {
+        ...store.data?.rows,
+        [activeId]: updatedRows
+      }
+    };
+    store.save(newData);
+  };
   
-  const updateRow = useCallback((u) => {
+  const updateRow = (u) => {
     if (!activeId) return;
-    update({ rows: { ...rows, [activeId]: (rows[activeId]||[]).map(c => c._id===u._id ? u : c) } });
+    const currentRows = store.data?.rows?.[activeId] || [];
+    const updated = currentRows.map(c => c._id===u._id ? u : c);
+    const newData = {
+      ...store.data,
+      rows: {
+        ...store.data?.rows,
+        [activeId]: updated
+      }
+    };
+    store.save(newData);
     if (ficheContact && ficheContact._id === u._id) setFicheContact(u);
-  }, [activeId, rows, ficheContact]);
+  };
   
-  const deleteRow = useCallback((id) => {
+  const deleteRow = (id) => {
     if (!activeId) return;
-    update({ rows: { ...rows, [activeId]: (rows[activeId]||[]).filter(c => c._id!==id) } });
-    logActivity(`Influenceur supprimé`);
-  }, [activeId, rows]);
+    const currentRows = store.data?.rows?.[activeId] || [];
+    const filtered = currentRows.filter(c => c._id!==id);
+    const newData = {
+      ...store.data,
+      rows: {
+        ...store.data?.rows,
+        [activeId]: filtered
+      }
+    };
+    store.save(newData);
+  };
   const addTheme = (secId, t) => {
     const ct = store.data?.themes || DEFAULT_THEMES;
     store.save({ ...store.data, themes: { ...ct, [secId]: [...(ct[secId]||[]), t] } });
@@ -1028,13 +1041,19 @@ export default function Home() {
   };
   const selectTheme = (sid, tid) => { setSection(sid); setTab(tid); setSearch(""); setFilterStatus("Tous"); };
 
-  const handleImport = useCallback((newRows, mode) => {
+  const handleImport = (newRows, mode) => {
     if (!activeId) return;
     const existing = rows[activeId] || [];
     const merged = mode==="replace" ? newRows : [...existing, ...newRows];
-    update({ rows: { ...rows, [activeId]: merged } });
-    logActivity(`Import CSV : ${newRows.length} lignes (mode: ${mode==="replace"?"remplacement":"ajout"})`);
-  }, [activeId, rows]);
+    const newData = {
+      ...store.data,
+      rows: {
+        ...store.data?.rows,
+        [activeId]: merged
+      }
+    };
+    store.save(newData);
+  };
 
   const stTotal=curRows.length; const stOui=curRows.filter(c=>c.contacte==="Oui").length;
   const stWait=curRows.filter(c=>c.contacte==="En attente").length; const stRel=curRows.filter(c=>c.contacte==="Relancé").length;
