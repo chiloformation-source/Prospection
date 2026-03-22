@@ -1185,6 +1185,8 @@ export default function Home() {
   const [editTemplate, setEditTemplate] = useState(null);
   const [showImport, setShowImport] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAddSection, setShowAddSection] = useState(false);
+  const [confirmDelSection, setConfirmDelSection] = useState(null);
   const [viewMode, setViewMode] = useState("table"); // "table" | "stats"
   const tableRef = useRef();
 
@@ -1296,6 +1298,34 @@ export default function Home() {
     const updated_sections = cs.map(s => s.id === updated.id ? updated : s);
     store.save({ ...store.data, sections: updated_sections });
   };
+  const addSection = (sec) => {
+    const cs = store.data?.sections || sections;
+    const ct = store.data?.themes || DEFAULT_THEMES;
+    const defaultTheme = { id: "t_"+Date.now().toString(36), label: "Général", icon: "📋", accent: sec.accent };
+    store.save({
+      ...store.data,
+      sections: [...cs, sec],
+      themes: { ...ct, [sec.id]: [defaultTheme] },
+      sectionTemplates: { ...(store.data?.sectionTemplates||{}), [sec.id]: "" },
+    });
+    setSection(sec.id); setTab(defaultTheme.id);
+  };
+  const removeSection = (secId) => {
+    const cs = store.data?.sections || sections;
+    const ct = store.data?.themes || DEFAULT_THEMES;
+    const cr = store.data?.rows || {};
+    const ctt = store.data?.themeTemplates || {};
+    const cst = store.data?.sectionTemplates || {};
+    // Remove all themes/rows for this section
+    const themeIds = (ct[secId]||[]).map(t=>t.id);
+    const newRows = {...cr}; themeIds.forEach(id=>delete newRows[id]);
+    const newTT = {...ctt}; themeIds.forEach(id=>delete newTT[id]);
+    const newST = {...cst}; delete newST[secId];
+    const newThemes = {...ct}; delete newThemes[secId];
+    const newSections = cs.filter(s=>s.id!==secId);
+    store.save({ ...store.data, sections: newSections, themes: newThemes, rows: newRows, themeTemplates: newTT, sectionTemplates: newST });
+    if(section===secId && newSections.length>0) { setSection(newSections[0].id); const ft=newThemes[newSections[0].id]; if(ft&&ft[0])setTab(ft[0].id); }
+  };
   const addTheme = (secId, t) => {
     const ct = store.data?.themes || DEFAULT_THEMES;
     store.save({ ...store.data, themes: { ...ct, [secId]: [...(ct[secId]||[]), t] } });
@@ -1384,7 +1414,7 @@ export default function Home() {
                   <span style={{fontSize:15}}>{sec.icon}</span>
                   {sidebarOpen&&<><span style={{flex:1,textAlign:"left"}}>{sec.label}</span><span style={{fontSize:9,opacity:.5,transform:isCol?"rotate(-90deg)":"rotate(0)",transition:"transform .15s"}}>▼</span></>}
                 </button>
-                {sidebarOpen&&isAct&&<><button onClick={()=>setEditTemplate({type:"section",id:sec.id,label:sec.label,accent:sec.accent})} title="Template mail" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,padding:"4px 6px",opacity:.4,color:sec.accent}}>📝</button><button onClick={()=>setEditColumns(sec)} title="Configurer colonnes" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,padding:"4px 6px",opacity:.4,color:sec.accent}}>📊</button><button onClick={()=>setEditSection(sec)} title="Modifier section" style={{background:"none",border:"none",cursor:"pointer",fontSize:10,padding:"2px 4px",opacity:.35,color:sec.accent}}>✏️</button></>}
+                {sidebarOpen&&isAct&&<><button onClick={()=>setEditTemplate({type:"section",id:sec.id,label:sec.label,accent:sec.accent})} title="Template mail" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,padding:"4px 6px",opacity:.4,color:sec.accent}}>📝</button><button onClick={()=>setEditColumns(sec)} title="Configurer colonnes" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,padding:"4px 6px",opacity:.4,color:sec.accent}}>📊</button><button onClick={()=>setEditSection(sec)} title="Modifier section" style={{background:"none",border:"none",cursor:"pointer",fontSize:10,padding:"2px 4px",opacity:.35,color:sec.accent}}>✏️</button>{sec.id.startsWith("s_")&&<button onClick={()=>setConfirmDelSection(sec)} title="Supprimer section" style={{background:"none",border:"none",cursor:"pointer",fontSize:10,padding:"2px 4px",opacity:.35,color:"#E1306C"}}>🗑</button>}</>}
               </div>
               {sidebarOpen&&!isCol&&<div style={{padding:"2px 0 4px 20px"}}>
                 {st.map(t=>{const active=sec.id===section&&activeId===t.id;const count=(rows[t.id]||[]).length;const hasOv=!!themeTemplates[t.id];return<div key={t.id} style={{display:"flex",alignItems:"center"}}>
@@ -1402,6 +1432,11 @@ export default function Home() {
               </div>}
             </div>;
           })}
+          {sidebarOpen&&<div style={{padding:"8px 14px"}}>
+            <button onClick={()=>setShowAddSection(true)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"8px 12px",borderRadius:8,border:"2px dashed #D0AEFF",background:"transparent",color:"#833AB4",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+              <span style={{fontSize:14}}>+</span> Nouvelle section
+            </button>
+          </div>}
         </div>
         {/* Vue switcher bas sidebar */}
         {sidebarOpen&&<div style={{padding:"8px 12px",borderTop:"1px solid #EEEEF8",display:"flex",gap:4}}>
@@ -1531,6 +1566,16 @@ export default function Home() {
         onDelete={i=>update({savedFilters:(savedFilters||[]).filter((_,j)=>j!==i)})}/>
 
       <ConfirmModal open={!!confirmDel} msg={`Supprimer « ${confirmDel?.label} » ?`} onOk={()=>removeTheme(confirmDel.id)} onNo={()=>setConfirmDel(null)}/>
+
+      {/* Add Section Modal */}
+      <EditSectionModal open={showAddSection} onClose={()=>setShowAddSection(false)} onSave={s=>{
+        const id = "s_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+        addSection({...s, id});
+        setShowAddSection(false);
+      }} section={{id:"",label:"",icon:"📌",accent:"#833AB4"}} defaultAccent="#833AB4" isNew={true}/>
+
+      {/* Confirm Delete Section */}
+      <ConfirmModal open={!!confirmDelSection} msg={`Supprimer la section « ${confirmDelSection?.label} » et toutes ses thématiques ?`} onOk={()=>{removeSection(confirmDelSection.id);setConfirmDelSection(null);}} onNo={()=>setConfirmDelSection(null)}/>
     </div>
   </>;
 }
