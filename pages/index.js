@@ -877,6 +877,54 @@ function ConfirmModal({ open, msg, onOk, onNo }) {
   </div>;
 }
 
+/* ═══════════ COLUMNS CONFIG MODAL ═══════════ */
+function ColumnsConfigModal({ open, onClose, onSave, section, allColumns }) {
+  const [cols,setCols]=useState([]);
+  useEffect(()=>{if(open&&section){setCols(section.columns&&section.columns.length?section.columns:DEFAULT_SECTION_COLUMNS||COLUMNS_DEF);}}, [open,section]);
+  if(!open) return null;
+  const toggleCol = (key) => {
+    setCols(c => c.some(x=>x.key===key) ? c.filter(x=>x.key!==key) : [...c, ALL_COLUMN_DEFS.find(d=>d.key===key)].filter(Boolean));
+  };
+  const moveUp = (idx) => {
+    if(idx>0) {const nc=[...cols]; [nc[idx-1],nc[idx]]=[nc[idx],nc[idx-1]]; setCols(nc);}
+  };
+  const moveDown = (idx) => {
+    if(idx<cols.length-1) {const nc=[...cols]; [nc[idx],nc[idx+1]]=[nc[idx+1],nc[idx]]; setCols(nc);}
+  };
+  return <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.3)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+    <div onClick={e=>e.stopPropagation()} style={{background:"#fff",border:"1px solid #E8E8F0",borderRadius:18,width:"min(500px,92vw)",maxHeight:"80vh",overflow:"hidden",boxShadow:"0 24px 80px rgba(131,58,180,.2)",display:"flex",flexDirection:"column"}}>
+      <div style={{padding:"20px 24px 14px",borderBottom:"1px solid #F0F0F8",display:"flex",justifyContent:"space-between",background:IG_GRADIENT_SOFT}}>
+        <span style={{fontSize:17,fontWeight:800,color:"#1a1a2e"}}>Configurer colonnes</span>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"#aaa",fontSize:22,cursor:"pointer"}}>×</button>
+      </div>
+      <div style={{flex:1,overflow:"auto",padding:"16px 24px"}}>
+        <div style={{marginBottom:16}}>
+          <span style={{fontSize:12,fontWeight:700,color:"#888",display:"block",marginBottom:10}}>Colonnes visibles (glissez pour réordonner)</span>
+          {cols.map((col,i)=><div key={col.key} style={{background:"#F8F0FF",border:"1px solid #E0D0FF",borderRadius:8,padding:"10px 12px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:13,color:"#1a1a2e",flex:1}}>{col.label}</span>
+            <div style={{display:"flex",gap:4}}>
+              <button onClick={()=>moveUp(i)} disabled={i===0} style={{background:"none",border:"1px solid #E0D0FF",borderRadius:4,padding:"4px 6px",cursor:i===0?"default":"pointer",opacity:i===0?.3:1,fontSize:12}}>↑</button>
+              <button onClick={()=>moveDown(i)} disabled={i===cols.length-1} style={{background:"none",border:"1px solid #E0D0FF",borderRadius:4,padding:"4px 6px",cursor:i===cols.length-1?"default":"pointer",opacity:i===cols.length-1?.3:1,fontSize:12}}>↓</button>
+              <button onClick={()=>toggleCol(col.key)} style={{background:"none",border:"1px solid #E1306C",borderRadius:4,padding:"4px 8px",cursor:"pointer",color:"#E1306C",fontSize:12,fontWeight:600}}>✕</button>
+            </div>
+          </div>)}
+        </div>
+        <div>
+          <span style={{fontSize:12,fontWeight:700,color:"#888",display:"block",marginBottom:10}}>Colonnes disponibles</span>
+          {(ALL_COLUMN_DEFS||COLUMNS_DEF).filter(d=>!cols.some(x=>x.key===d.key)).map(col=><div key={col.key} style={{background:"#FAFAFF",border:"1px solid #E8E8F0",borderRadius:8,padding:"10px 12px",marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:13,color:"#888",flex:1}}>{col.label}</span>
+            <button onClick={()=>toggleCol(col.key)} style={{background:IG_GRADIENT,border:"none",borderRadius:4,padding:"4px 10px",cursor:"pointer",color:"#fff",fontSize:12,fontWeight:600,fontFamily:"inherit"}}>+ Ajouter</button>
+          </div>)}
+        </div>
+      </div>
+      <div style={{padding:"16px 24px 20px",display:"flex",justifyContent:"flex-end",gap:10,borderTop:"1px solid #F0F0F8"}}>
+        <button onClick={onClose} style={{padding:"9px 20px",borderRadius:8,border:"1px solid #E0D0FF",background:"transparent",color:"#888",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Annuler</button>
+        <button onClick={()=>{onSave({...section,columns:cols});onClose();}} style={{padding:"9px 24px",borderRadius:8,border:"none",background:IG_GRADIENT,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Enregistrer</button>
+      </div>
+    </div>
+  </div>;
+}
+
 /* ═══════════ IMPORT MODAL ═══════════ */
 function ImportModal({ open, onClose, onImport, accent }) {
   const [preview,setPreview]=useState(null); const [error,setError]=useState(""); const [mode,setMode]=useState("replace");
@@ -1001,6 +1049,7 @@ export default function Home() {
   const [showAdd, setShowAdd] = useState(null); const [confirmDel, setConfirmDel] = useState(null);
   const [editTheme, setEditTheme] = useState(null);
   const [editSection, setEditSection] = useState(null);
+  const [editColumns, setEditColumns] = useState(null);
   const [collapsed, setCollapsed] = useState({}); const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mailContact, setMailContact] = useState(null);
   const [ficheContact, setFicheContact] = useState(null);
@@ -1198,7 +1247,7 @@ export default function Home() {
                   <span style={{fontSize:15}}>{sec.icon}</span>
                   {sidebarOpen&&<><span style={{flex:1,textAlign:"left"}}>{sec.label}</span><span style={{fontSize:9,opacity:.5,transform:isCol?"rotate(-90deg)":"rotate(0)",transition:"transform .15s"}}>▼</span></>}
                 </button>
-                {sidebarOpen&&isAct&&<><button onClick={()=>setEditTemplate({type:"section",id:sec.id,label:sec.label,accent:sec.accent})} title="Template mail" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,padding:"4px 6px",opacity:.4,color:sec.accent}}>📝</button><button onClick={()=>setEditSection(sec)} title="Modifier section" style={{background:"none",border:"none",cursor:"pointer",fontSize:10,padding:"2px 4px",opacity:.35,color:sec.accent}}>✏️</button></>}
+                {sidebarOpen&&isAct&&<><button onClick={()=>setEditTemplate({type:"section",id:sec.id,label:sec.label,accent:sec.accent})} title="Template mail" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,padding:"4px 6px",opacity:.4,color:sec.accent}}>📝</button><button onClick={()=>setEditColumns(sec)} title="Configurer colonnes" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,padding:"4px 6px",opacity:.4,color:sec.accent}}>📊</button><button onClick={()=>setEditSection(sec)} title="Modifier section" style={{background:"none",border:"none",cursor:"pointer",fontSize:10,padding:"2px 4px",opacity:.35,color:sec.accent}}>✏️</button></>}
               </div>
               {sidebarOpen&&!isCol&&<div style={{padding:"2px 0 4px 20px"}}>
                 {st.map(t=>{const active=sec.id===section&&activeId===t.id;const count=(rows[t.id]||[]).length;const hasOv=!!themeTemplates[t.id];return<div key={t.id} style={{display:"flex",alignItems:"center"}}>
@@ -1329,6 +1378,8 @@ export default function Home() {
       <AddThemeModal open={!!showAdd} onClose={()=>setShowAdd(null)} onAdd={t=>addTheme(showAdd,t)} defaultAccent={sections.find(s=>s.id===showAdd)?.accent}/>
 
       <EditSectionModal open={!!editSection} onClose={()=>setEditSection(null)} onSave={s=>{ updateSection(s); setEditSection(null); }} section={editSection} defaultAccent={editSection?.accent}/>
+
+      <ColumnsConfigModal open={!!editColumns} onClose={()=>setEditColumns(null)} onSave={s=>{ updateSection(s); setEditColumns(null); }} section={editColumns} allColumns={ALL_COLUMN_DEFS||COLUMNS_DEF}/>
 
       <EditThemeModal open={!!editTheme} onClose={()=>setEditTheme(null)} onSave={t=>{ if(editTheme.section){updateTheme(editTheme.section,editTheme.id,t);setEditTheme(null);} }} onDelete={()=>{if(editTheme?.id&&editTheme?.section){removeTheme(editTheme.id,editTheme.section);}}} theme={editTheme} defaultAccent={editTheme?.accent}/>
 
