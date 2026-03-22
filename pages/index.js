@@ -1434,6 +1434,7 @@ export default function Home() {
             </select>
           </div>
           <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <button onClick={()=>setEditColumns(secObj)} title="Configurer les colonnes" style={{padding:"6px 12px",borderRadius:8,border:"1px solid #D0AEFF",background:"#F8F0FF",color:"#833AB4",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📊 Colonnes</button>
             <button onClick={()=>setShowFilters(true)} title="Filtres sauvegardés" style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E8E8F8",background:"#fff",color:"#666",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🔖 Filtres</button>
             <button onClick={()=>setShowImport(true)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E8E8F8",background:"#fff",color:"#666",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📥 Import</button>
             <button onClick={()=>exportToCSV(curRows,curTheme?.label||"export",secObj?.label||"section")} style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E8E8F8",background:"#fff",color:"#666",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📤 Export</button>
