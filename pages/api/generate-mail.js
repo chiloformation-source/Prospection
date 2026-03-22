@@ -98,7 +98,7 @@ export default async function handler(req, res) {
     try {
       const parsed = JSON.parse(clean);
       if (parsed.subject && parsed.body) {
-        return res.status(200).json({ subject: parsed.subject, body: parsed.body });
+        return res.status(200).json({ subject: parsed.subject, body: parsed.body, scraped: scrapedInfo || null });
       }
     } catch (e) {}
 
@@ -109,6 +109,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         subject: subjectMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"'),
         body: bodyMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"'),
+        scraped: scrapedInfo || null,
       });
     }
 

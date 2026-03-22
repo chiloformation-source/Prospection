@@ -692,6 +692,7 @@ function MailPanel({ contact, themeLabel, sectionLabel, accent, template, onClos
   const [subject,setSubject]=useState(""); const [body,setBody]=useState("");
   const [loading,setLoading]=useState(false); const [error,setError]=useState("");
   const [copied,setCopied]=useState(false); const [sent,setSent]=useState(false);
+  const [scrapedData,setScrapedData]=useState(null); const [showScraped,setShowScraped]=useState(false);
   const links=[...(contact.site||[]),...(contact.youtube||[]),...(contact.instagram||[]),...(contact.autres||[])].filter(l=>l&&l.startsWith("http"));
 
   const generateMail=async()=>{
@@ -733,6 +734,7 @@ ${templateInfo}
       const data=await res.json();
       if(!res.ok) throw new Error(data.error);
       setSubject(data.subject||""); setBody(data.body||"");
+      if(data.scraped) setScrapedData(data.scraped);
     } catch(err){setError("Erreur : "+(err.message||"Réessayez."));}
     setLoading(false);
   };
@@ -774,6 +776,12 @@ ${templateInfo}
       </button>
       {error&&<div style={{marginTop:8,fontSize:12,color:"#E1306C"}}>{error}</div>}
     </div>
+    {scrapedData&&<div style={{padding:"0 20px 10px",flexShrink:0}}>
+      <button onClick={()=>setShowScraped(s=>!s)} style={{background:"#F0FFF4",border:"1px solid #C3E6CB",borderRadius:8,padding:"6px 12px",fontSize:11,fontWeight:600,color:"#1A7A4A",cursor:"pointer",fontFamily:"inherit",width:"100%",textAlign:"left"}}>
+        {showScraped?"▼":"▶"} Infos récupérées sur le prospect
+      </button>
+      {showScraped&&<div style={{marginTop:8,background:"#FAFAFF",border:"1px solid #E8E8F0",borderRadius:8,padding:"10px 14px",fontSize:11,color:"#555",maxHeight:200,overflowY:"auto",whiteSpace:"pre-wrap",lineHeight:1.5}}>{scrapedData}</div>}
+    </div>}
     <div style={{flex:1,padding:"0 20px 14px",overflowY:"auto",display:"flex",flexDirection:"column",gap:12}}>
       {(subject||body)?<>
         <div><label style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",display:"block",marginBottom:5}}>Objet</label>
