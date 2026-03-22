@@ -918,7 +918,14 @@ export default function Home() {
   const objectives = store.data?.objectives || [];
   const savedFilters = store.data?.savedFilters || [];
 
-  const update = (patch) => store.save({ ...store.data, ...patch });
+  const update = (patch) => {
+    const currentData = store.data || {};
+    console.log("[update] Current data:", currentData);
+    console.log("[update] Patch:", patch);
+    const newData = { ...currentData, ...patch };
+    console.log("[update] New data:", newData);
+    store.save(newData);
+  };
 
   const [section, setSection] = useState("portage");
   const [tab, setTab] = useState("ai");
