@@ -981,11 +981,15 @@ export default function Home() {
       return;
     }
     console.log("Adding row to theme:", activeId);
+    console.log("Current rows:", rows);
     const newRows = [...(rows[activeId]||[]), makeRow()];
-    update({ rows: { ...rows, [activeId]: newRows } });
+    console.log("New rows for theme:", newRows);
+    const updatedRows = { ...rows, [activeId]: newRows };
+    console.log("Updated rows object:", updatedRows);
+    update({ rows: updatedRows });
     logActivity(`Nouvelle ligne ajoutée dans ${curTheme?.label}`);
     setTimeout(() => { if (tableRef.current) tableRef.current.scrollTop = tableRef.current.scrollHeight; }, 100);
-  }, [activeId, rows, curTheme?.label, curTheme?.id]);
+  }, [activeId, rows, curTheme]);
   
   const updateRow = useCallback((u) => {
     if (!activeId) return;
