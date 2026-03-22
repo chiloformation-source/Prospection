@@ -360,66 +360,7 @@ function TableRow({ c, onUpdate, onDelete, onMail, onOpenFiche, accent, idx, isD
   </tr>;
 }
 
-/* ═══════════ KANBAN ═══════════ */
-function KanbanView({ rows, onUpdate, onDelete, onMail, onOpenFiche, accent, isDupFn }) {
-  const byStatus = STATUTS.reduce((acc,s)=>{acc[s]=rows.filter(r=>r.contacte===s);return acc;},{});
-  const statusColors = { Non:"#FFF0F0", Oui:"#F0FFF4", "En attente":"#FFFBF0", Relancé:"#F5F0FF" };
-  const statusDot = { Non:"#E74C3C", Oui:"#27AE60", "En attente":"#F39C12", Relancé:"#8E44AD" };
 
-  const handleDragStart = (e, rowId, fromStatus) => {
-    e.dataTransfer.setData("rowId", rowId);
-    e.dataTransfer.setData("fromStatus", fromStatus);
-  };
-  const handleDrop = (e, toStatus) => {
-    e.preventDefault();
-    const rowId = e.dataTransfer.getData("rowId");
-    const row = rows.find(r=>r._id===rowId);
-    if (row && row.contacte !== toStatus) {
-      onUpdate({...row, contacte:toStatus, history:[...(row.history||[]),{date:new Date().toISOString(),action:`Statut changé → ${toStatus}`,note:""}]});
-    }
-  };
-
-  return <div style={{display:"flex",gap:14,padding:"16px",overflowX:"auto",height:"100%",alignItems:"flex-start"}}>
-    {STATUTS.map(s=>{
-      const sRows=byStatus[s]||[];
-      return <div key={s} onDragOver={e=>e.preventDefault()} onDrop={e=>handleDrop(e,s)}
-        style={{flex:"0 0 260px",background:statusColors[s],borderRadius:12,border:`1.5px solid ${statusDot[s]}30`,display:"flex",flexDirection:"column",maxHeight:"calc(100vh - 200px)"}}>
-        <div style={{padding:"12px 14px 8px",display:"flex",alignItems:"center",gap:8,borderBottom:`1px solid ${statusDot[s]}20`}}>
-          <span style={{width:9,height:9,borderRadius:"50%",background:statusDot[s],flexShrink:0}}/>
-          <span style={{fontWeight:700,fontSize:13,color:SS[s].fg}}>{s}</span>
-          <span style={{marginLeft:"auto",background:`${statusDot[s]}20`,color:statusDot[s],fontWeight:700,fontSize:11,padding:"2px 8px",borderRadius:10}}>{sRows.length}</span>
-        </div>
-        <div style={{flex:1,overflowY:"auto",padding:"8px"}}>
-          {sRows.map(r=>(
-            <div key={r._id} draggable onDragStart={e=>handleDragStart(e,r._id,s)}
-              style={{background:"#fff",border:"1px solid #EEEEF8",borderRadius:10,padding:"10px 12px",marginBottom:8,cursor:"grab",boxShadow:"0 1px 4px rgba(131,58,180,.06)"}}>
-              <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:6}}>
-                <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                  <div style={{width:34,height:34,borderRadius:"50%",overflow:"hidden",flexShrink:0,background:"#F5F0FF",display:"flex",alignItems:"center",justifyContent:"center",border:"1.5px solid #E8E8F0"}}>
-                    {r.avatar?<img src={r.avatar} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:13,fontWeight:800,color:"#833AB4"}}>{(r.nom||r.pseudo||"?")[0].toUpperCase()}</span>}
-                  </div>
-                  <div>
-                    <div style={{fontWeight:700,fontSize:13,color:"#1a1a2e"}}>{r.nom||r.pseudo||"—"}</div>
-                    {r.pseudo&&r.nom&&<div style={{fontSize:11,color:"#aaa"}}>@{r.pseudo}</div>}
-                    {r.specialisation&&<span style={{display:"inline-block",marginTop:4,background:`${accent}12`,color:accent,fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:10}}>{r.specialisation}</span>}
-                  </div>
-                </div>
-                {isDupFn(r)&&<DupBadge/>}
-              </div>
-              {r.score>0&&<div style={{marginTop:6}}><StarRating value={r.score} onChange={()=>{}} size={12}/></div>}
-              {r.commentaire&&<div style={{marginTop:6,fontSize:11,color:"#888",lineHeight:1.4,borderTop:"1px solid #F5F5F8",paddingTop:6}}>{r.commentaire.slice(0,80)}{r.commentaire.length>80?"…":""}</div>}
-              <div style={{display:"flex",gap:4,marginTop:8,justifyContent:"flex-end"}}>
-                <button onClick={()=>onOpenFiche(r)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,padding:"2px 4px",opacity:.6}}>👤</button>
-                <button onClick={()=>onMail(r)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,padding:"2px 4px",opacity:.6}}>✉️</button>
-                <button onClick={()=>onDelete(r._id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,padding:"2px 4px",opacity:.5,color:"#E1306C"}}>🗑</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>;
-    })}
-  </div>;
-}
 
 /* ═══════════ STATS VIEW ═══════════ */
 function StatsView({ rows, accent, objectifs, onUpdateObjectifs }) {
@@ -1032,6 +973,7 @@ export default function Home() {
       alert("Sélectionnez une thématique d'abord");
       return;
     }
+    console.log("Adding row to theme:", activeId);
     const newRows = [...(rows[activeId]||[]), makeRow()];
     update({ rows: { ...rows, [activeId]: newRows } });
     logActivity(`Nouvelle ligne ajoutée dans ${curTheme?.label}`);
@@ -1161,7 +1103,7 @@ export default function Home() {
         </div>
         {/* Vue switcher bas sidebar */}
         {sidebarOpen&&<div style={{padding:"8px 12px",borderTop:"1px solid #EEEEF8",display:"flex",gap:4}}>
-          {[{id:"table",label:"☰ Table"},{id:"kanban",label:"◫ Kanban"},{id:"stats",label:"📊 Stats"}].map(v=>(
+          {[{id:"table",label:"☰ Table"},{id:"stats",label:"📊 Stats"}].map(v=>(
             <button key={v.id} onClick={()=>setViewMode(v.id)} style={{flex:1,padding:"5px 0",borderRadius:6,border:"none",background:viewMode===v.id?IG_GRADIENT:"#F5F5FA",color:viewMode===v.id?"#fff":"#888",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
               {v.label}
             </button>
@@ -1241,10 +1183,6 @@ export default function Home() {
                   </tbody>
                 </table>
           }
-        </div>}
-
-        {viewMode==="kanban"&&<div style={{flex:1,overflow:"auto"}}>
-          <KanbanView rows={filtered} onUpdate={updateRow} onDelete={deleteRow} onMail={setMailContact} onOpenFiche={setFicheContact} accent={curTheme?.accent||"#833AB4"} isDupFn={isDupFn}/>
         </div>}
 
         {viewMode==="stats"&&<div style={{flex:1,overflow:"auto"}}>
