@@ -991,7 +991,7 @@ export default function Home() {
   const [showImport, setShowImport] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState("table"); // "table" | "stats"
-  const tableRef = useRef(); const activeIdRef = useRef("ai");
+  const tableRef = useRef();
 
   useEffect(() => {
     if (!store.loaded) return;
@@ -1001,7 +1001,8 @@ export default function Home() {
   }, [themes, store.loaded]);
 
   const curTheme = resolveTheme(themes, section, tab);
-  const activeId = curTheme ? curTheme.id : ""; activeIdRef.current = activeId;
+  const activeId = curTheme ? curTheme.id : "";
+  
   useEffect(() => { if (curTheme && curTheme.id !== tab) setTab(curTheme.id); }, [curTheme, tab]);
 
   const curRows = activeId ? (rows[activeId] || []) : [];
@@ -1026,22 +1027,28 @@ export default function Home() {
     update({ activityLog: log });
   };
 
-  const addRow = () => {
-    const tid = activeIdRef.current; if (!tid) return;
-    update({ rows: { ...rows, [tid]: [...(rows[tid]||[]), makeRow()] } });
+  const addRow = useCallback(() => {
+    if (!activeId) {
+      alert("Sélectionnez une thématique d'abord");
+      return;
+    }
+    const newRows = [...(rows[activeId]||[]), makeRow()];
+    update({ rows: { ...rows, [activeId]: newRows } });
     logActivity(`Nouvelle ligne ajoutée dans ${curTheme?.label}`);
     setTimeout(() => { if (tableRef.current) tableRef.current.scrollTop = tableRef.current.scrollHeight; }, 100);
-  };
-  const updateRow = (u) => {
-    const tid = activeIdRef.current; if (!tid) return;
-    update({ rows: { ...rows, [tid]: (rows[tid]||[]).map(c => c._id===u._id ? u : c) } });
+  }, [activeId, rows, curTheme?.label, curTheme?.id]);
+  
+  const updateRow = useCallback((u) => {
+    if (!activeId) return;
+    update({ rows: { ...rows, [activeId]: (rows[activeId]||[]).map(c => c._id===u._id ? u : c) } });
     if (ficheContact && ficheContact._id === u._id) setFicheContact(u);
-  };
-  const deleteRow = (id) => {
-    const tid = activeIdRef.current; if (!tid) return;
-    update({ rows: { ...rows, [tid]: (rows[tid]||[]).filter(c => c._id!==id) } });
+  }, [activeId, rows, ficheContact]);
+  
+  const deleteRow = useCallback((id) => {
+    if (!activeId) return;
+    update({ rows: { ...rows, [activeId]: (rows[activeId]||[]).filter(c => c._id!==id) } });
     logActivity(`Influenceur supprimé`);
-  };
+  }, [activeId, rows]);
   const addTheme = (secId, t) => {
     const ct = store.data?.themes || DEFAULT_THEMES;
     store.save({ ...store.data, themes: { ...ct, [secId]: [...(ct[secId]||[]), t] } });
@@ -1067,13 +1074,13 @@ export default function Home() {
   };
   const selectTheme = (sid, tid) => { setSection(sid); setTab(tid); setSearch(""); setFilterStatus("Tous"); };
 
-  const handleImport = (newRows, mode) => {
-    const tid = activeIdRef.current; if (!tid) return;
-    const existing = rows[tid] || [];
+  const handleImport = useCallback((newRows, mode) => {
+    if (!activeId) return;
+    const existing = rows[activeId] || [];
     const merged = mode==="replace" ? newRows : [...existing, ...newRows];
-    update({ rows: { ...rows, [tid]: merged } });
+    update({ rows: { ...rows, [activeId]: merged } });
     logActivity(`Import CSV : ${newRows.length} lignes (mode: ${mode==="replace"?"remplacement":"ajout"})`);
-  };
+  }, [activeId, rows]);
 
   const stTotal=curRows.length; const stOui=curRows.filter(c=>c.contacte==="Oui").length;
   const stWait=curRows.filter(c=>c.contacte==="En attente").length; const stRel=curRows.filter(c=>c.contacte==="Relancé").length;
