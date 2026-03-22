@@ -34,29 +34,98 @@ const DEFAULT_SECTION_TEMPLATES = {
   closer: "Bonjour {nom},\n\nJe vous contacte pour une opportunité.\n\n[Personnalisez ce template]",
 };
 
+const COLUMN_TYPES = [
+  { value:"text", label:"Texte" },
+  { value:"textarea", label:"Zone de texte" },
+  { value:"links", label:"Liens" },
+  { value:"status", label:"Statut" },
+  { value:"score", label:"Score étoiles" },
+  { value:"avatar", label:"Photo" },
+];
+
 const ALL_COLUMN_DEFS = [
-  { key:"avatar", label:"Photo", w:60 },
-  { key:"nom", label:"Nom Prénom", w:155 },
-  { key:"pseudo", label:"Nom Réseaux", w:130 },
-  { key:"specialisation", label:"Spécialisation", w:160 },
-  { key:"score", label:"Score", w:140 },
-  { key:"site", label:"Site Web", w:190 },
-  { key:"youtube", label:"YouTube", w:190 },
-  { key:"instagram", label:"Instagram", w:180 },
-  { key:"autres", label:"Autres Réseaux", w:190 },
-  { key:"mail", label:"E-mail", w:185 },
-  { key:"numero", label:"Numéro", w:130 },
-  { key:"contacte", label:"Contacté", w:128 },
-  { key:"echange", label:"Échange", w:220 },
-  { key:"commentaire", label:"Commentaire", w:230 },
+  { key:"avatar", label:"Photo", w:60, type:"avatar" },
+  { key:"nom", label:"Nom Prénom", w:155, type:"text" },
+  { key:"pseudo", label:"Nom Réseaux", w:130, type:"text" },
+  { key:"specialisation", label:"Spécialisation", w:160, type:"textarea" },
+  { key:"score", label:"Score", w:140, type:"score" },
+  { key:"site", label:"Site Web", w:190, type:"links" },
+  { key:"youtube", label:"YouTube", w:190, type:"links" },
+  { key:"instagram", label:"Instagram", w:180, type:"links" },
+  { key:"autres", label:"Autres Réseaux", w:190, type:"links" },
+  { key:"mail", label:"E-mail", w:185, type:"text" },
+  { key:"numero", label:"Numéro", w:130, type:"text" },
+  { key:"contacte", label:"Contacté", w:128, type:"status" },
+  { key:"echange", label:"Échange", w:220, type:"textarea" },
+  { key:"commentaire", label:"Commentaire", w:230, type:"textarea" },
 ];
 
 const DEFAULT_SECTION_COLUMNS = {
-  portage: ["avatar","nom","pseudo","specialisation","score","site","youtube","instagram","autres","mail","numero","contacte","echange","commentaire"],
-  apporteur: ["avatar","nom","pseudo","specialisation","score","site","mail","numero","contacte","commentaire"],
-  agency: ["avatar","nom","pseudo","specialisation","score","site","instagram","mail","numero","contacte","commentaire"],
-  school: ["avatar","nom","pseudo","specialisation","score","site","mail","contacte","commentaire"],
-  closer: ["avatar","nom","pseudo","specialisation","score","site","mail","numero","contacte","echange","commentaire"],
+  portage: [
+    { key:"avatar", label:"Photo", w:60, type:"avatar" },
+    { key:"nom", label:"Nom Prénom", w:155, type:"text" },
+    { key:"pseudo", label:"Nom Réseaux", w:130, type:"text" },
+    { key:"specialisation", label:"Spécialisation", w:160, type:"textarea" },
+    { key:"score", label:"Score", w:140, type:"score" },
+    { key:"site", label:"Site Web", w:190, type:"links" },
+    { key:"youtube", label:"YouTube", w:190, type:"links" },
+    { key:"instagram", label:"Instagram", w:180, type:"links" },
+    { key:"autres", label:"Autres Réseaux", w:190, type:"links" },
+    { key:"mail", label:"E-mail", w:185, type:"text" },
+    { key:"numero", label:"Numéro", w:130, type:"text" },
+    { key:"contacte", label:"Contacté", w:128, type:"status" },
+    { key:"echange", label:"Échange", w:220, type:"textarea" },
+    { key:"commentaire", label:"Commentaire", w:230, type:"textarea" },
+  ],
+  apporteur: [
+    { key:"avatar", label:"Photo", w:60, type:"avatar" },
+    { key:"nom", label:"Nom Prénom", w:155, type:"text" },
+    { key:"pseudo", label:"Nom Réseaux", w:130, type:"text" },
+    { key:"specialisation", label:"Spécialisation", w:160, type:"textarea" },
+    { key:"score", label:"Score", w:140, type:"score" },
+    { key:"site", label:"Site Web", w:190, type:"links" },
+    { key:"mail", label:"E-mail", w:185, type:"text" },
+    { key:"numero", label:"Numéro", w:130, type:"text" },
+    { key:"contacte", label:"Contacté", w:128, type:"status" },
+    { key:"commentaire", label:"Commentaire", w:230, type:"textarea" },
+  ],
+  agency: [
+    { key:"avatar", label:"Photo", w:60, type:"avatar" },
+    { key:"nom", label:"Nom Prénom", w:155, type:"text" },
+    { key:"pseudo", label:"Nom Réseaux", w:130, type:"text" },
+    { key:"specialisation", label:"Spécialisation", w:160, type:"textarea" },
+    { key:"score", label:"Score", w:140, type:"score" },
+    { key:"site", label:"Site Web", w:190, type:"links" },
+    { key:"instagram", label:"Instagram", w:180, type:"links" },
+    { key:"mail", label:"E-mail", w:185, type:"text" },
+    { key:"numero", label:"Numéro", w:130, type:"text" },
+    { key:"contacte", label:"Contacté", w:128, type:"status" },
+    { key:"commentaire", label:"Commentaire", w:230, type:"textarea" },
+  ],
+  school: [
+    { key:"avatar", label:"Photo", w:60, type:"avatar" },
+    { key:"nom", label:"Nom Prénom", w:155, type:"text" },
+    { key:"pseudo", label:"Nom Réseaux", w:130, type:"text" },
+    { key:"specialisation", label:"Spécialisation", w:160, type:"textarea" },
+    { key:"score", label:"Score", w:140, type:"score" },
+    { key:"site", label:"Site Web", w:190, type:"links" },
+    { key:"mail", label:"E-mail", w:185, type:"text" },
+    { key:"contacte", label:"Contacté", w:128, type:"status" },
+    { key:"commentaire", label:"Commentaire", w:230, type:"textarea" },
+  ],
+  closer: [
+    { key:"avatar", label:"Photo", w:60, type:"avatar" },
+    { key:"nom", label:"Nom Prénom", w:155, type:"text" },
+    { key:"pseudo", label:"Nom Réseaux", w:130, type:"text" },
+    { key:"specialisation", label:"Spécialisation", w:160, type:"textarea" },
+    { key:"score", label:"Score", w:140, type:"score" },
+    { key:"site", label:"Site Web", w:190, type:"links" },
+    { key:"mail", label:"E-mail", w:185, type:"text" },
+    { key:"numero", label:"Numéro", w:130, type:"text" },
+    { key:"contacte", label:"Contacté", w:128, type:"status" },
+    { key:"echange", label:"Échange", w:220, type:"textarea" },
+    { key:"commentaire", label:"Commentaire", w:230, type:"textarea" },
+  ],
 };
 
 
@@ -357,16 +426,17 @@ function TableRow({ c, onUpdate, onDelete, onMail, onOpenFiche, accent, idx, isD
   return <tr onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} style={{background:bg,transition:"background .12s"}}>
     {columns.map(col=>{
       const key = col.key;
+      const type = col.type || "text";
       const value = c[key];
-      if(key === "avatar") return <td key={key} style={{...td0,width:56,paddingLeft:8}}><AvatarCell value={value||""} onChange={v=>up(key,v)} nom={c.nom} pseudo={c.pseudo}/></td>;
-      if(key === "specialisation" || key === "echange" || key === "commentaire") return <td key={key} style={td0}><textarea value={value||""} onChange={e=>up(key,e.target.value)} placeholder={col.label} rows={2} style={{...ci,resize:"vertical",minHeight:32,lineHeight:1.4}} onFocus={focB} onBlur={bluB}/></td>;
-      if(key === "score") return <td key={key} style={td0}><StarRating value={value||0} onChange={v=>up(key,v)}/></td>;
-      if(key === "site" || key === "youtube" || key === "instagram" || key === "autres") {
-        const ph = key === "site" ? "https://site.com" : key === "youtube" ? "https://youtube.com/@..." : key === "instagram" ? "https://instagram.com/..." : "TikTok, LinkedIn...";
-        const color = key === "youtube" ? "#FF0000" : key === "instagram" ? "#E1306C" : "#405DE6";
-        return <td key={key} style={td0}><LinkCell links={value||[""]} onChange={v=>up(key,v)} ph={ph} accent={color}/></td>;
+      if(type === "avatar") return <td key={key} style={{...td0,width:56,paddingLeft:8}}><AvatarCell value={value||""} onChange={v=>up(key,v)} nom={c.nom} pseudo={c.pseudo}/></td>;
+      if(type === "textarea") return <td key={key} style={td0}><textarea value={value||""} onChange={e=>up(key,e.target.value)} placeholder={col.label} rows={2} style={{...ci,resize:"vertical",minHeight:32,lineHeight:1.4}} onFocus={focB} onBlur={bluB}/></td>;
+      if(type === "score") return <td key={key} style={td0}><StarRating value={value||0} onChange={v=>up(key,v)}/></td>;
+      if(type === "links") {
+        const ph = col.placeholder || "https://...";
+        const color = col.accent || accent || "#405DE6";
+        return <td key={key} style={td0}><LinkCell links={Array.isArray(value)?value:[value||""]} onChange={v=>up(key,v)} ph={ph} accent={color}/></td>;
       }
-      if(key === "contacte") return <td key={key} style={{...td0,textAlign:"center"}}><StatusBadge value={value||"Non"} onChange={v=>up(key,v)}/></td>;
+      if(type === "status") return <td key={key} style={{...td0,textAlign:"center"}}><StatusBadge value={value||"Non"} onChange={v=>up(key,v)}/></td>;
       return <td key={key} style={td0}><input value={value||""} onChange={e=>up(key,e.target.value)} placeholder={col.label} style={{...ci,color:key === "mail" ? (value ? "#405DE6" : "#1a1a2e") : "#1a1a2e"}} onFocus={focB} onBlur={bluB}/></td>;
     })}
     <td style={{...td0,textAlign:"center"}}>
@@ -880,41 +950,100 @@ function ConfirmModal({ open, msg, onOk, onNo }) {
 /* ═══════════ COLUMNS CONFIG MODAL ═══════════ */
 function ColumnsConfigModal({ open, onClose, onSave, section, allColumns }) {
   const [cols,setCols]=useState([]);
-  useEffect(()=>{if(open&&section){setCols(section.columns&&section.columns.length?section.columns:DEFAULT_SECTION_COLUMNS||COLUMNS_DEF);}}, [open,section]);
+  const [editIdx,setEditIdx]=useState(-1);
+  const [editLabel,setEditLabel]=useState("");
+  const [showNew,setShowNew]=useState(false);
+  const [newLabel,setNewLabel]=useState("");
+  const [newType,setNewType]=useState("text");
+
+  useEffect(()=>{
+    if(open&&section){
+      // Support both old format (array of keys) and new format (array of objects)
+      const raw = section.columns && section.columns.length ? section.columns : DEFAULT_SECTION_COLUMNS[section.id] || [];
+      const resolved = raw.map(c => {
+        if (typeof c === "string") return ALL_COLUMN_DEFS.find(d=>d.key===c) || {key:c,label:c,w:150,type:"text"};
+        return c;
+      });
+      setCols(resolved);
+      setEditIdx(-1); setShowNew(false); setNewLabel(""); setNewType("text");
+    }
+  }, [open,section]);
+
   if(!open) return null;
-  const toggleCol = (key) => {
-    setCols(c => c.some(x=>x.key===key) ? c.filter(x=>x.key!==key) : [...c, ALL_COLUMN_DEFS.find(d=>d.key===key)].filter(Boolean));
+
+  const removeCol = (idx) => setCols(c=>c.filter((_,i)=>i!==idx));
+  const moveUp = (idx) => { if(idx>0) {const nc=[...cols]; [nc[idx-1],nc[idx]]=[nc[idx],nc[idx-1]]; setCols(nc);} };
+  const moveDown = (idx) => { if(idx<cols.length-1) {const nc=[...cols]; [nc[idx],nc[idx+1]]=[nc[idx+1],nc[idx]]; setCols(nc);} };
+  const startEdit = (idx) => { setEditIdx(idx); setEditLabel(cols[idx].label); };
+  const saveEdit = () => { if(editIdx>=0&&editLabel.trim()) { const nc=[...cols]; nc[editIdx]={...nc[editIdx],label:editLabel.trim()}; setCols(nc); } setEditIdx(-1); };
+  const addCol = (colDef) => { setCols(c=>[...c,colDef]); };
+  const addCustomCol = () => {
+    if(!newLabel.trim()) return;
+    const key = "c_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    addCol({ key, label:newLabel.trim(), w:160, type:newType });
+    setNewLabel(""); setNewType("text"); setShowNew(false);
   };
-  const moveUp = (idx) => {
-    if(idx>0) {const nc=[...cols]; [nc[idx-1],nc[idx]]=[nc[idx],nc[idx-1]]; setCols(nc);}
-  };
-  const moveDown = (idx) => {
-    if(idx<cols.length-1) {const nc=[...cols]; [nc[idx],nc[idx+1]]=[nc[idx+1],nc[idx]]; setCols(nc);}
-  };
+
+  const availableDefs = ALL_COLUMN_DEFS.filter(d=>!cols.some(x=>x.key===d.key));
+
   return <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.3)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-    <div onClick={e=>e.stopPropagation()} style={{background:"#fff",border:"1px solid #E8E8F0",borderRadius:18,width:"min(500px,92vw)",maxHeight:"80vh",overflow:"hidden",boxShadow:"0 24px 80px rgba(131,58,180,.2)",display:"flex",flexDirection:"column"}}>
+    <div onClick={e=>e.stopPropagation()} style={{background:"#fff",border:"1px solid #E8E8F0",borderRadius:18,width:"min(560px,94vw)",maxHeight:"85vh",overflow:"hidden",boxShadow:"0 24px 80px rgba(131,58,180,.2)",display:"flex",flexDirection:"column"}}>
       <div style={{padding:"20px 24px 14px",borderBottom:"1px solid #F0F0F8",display:"flex",justifyContent:"space-between",background:IG_GRADIENT_SOFT}}>
-        <span style={{fontSize:17,fontWeight:800,color:"#1a1a2e"}}>Configurer colonnes</span>
+        <div><span style={{fontSize:17,fontWeight:800,color:"#1a1a2e"}}>Configurer colonnes</span><div style={{fontSize:11,color:"#888",marginTop:2}}>Ajouter, modifier, réordonner ou supprimer</div></div>
         <button onClick={onClose} style={{background:"none",border:"none",color:"#aaa",fontSize:22,cursor:"pointer"}}>×</button>
       </div>
       <div style={{flex:1,overflow:"auto",padding:"16px 24px"}}>
+        {/* Active columns */}
         <div style={{marginBottom:16}}>
-          <span style={{fontSize:12,fontWeight:700,color:"#888",display:"block",marginBottom:10}}>Colonnes visibles (glissez pour réordonner)</span>
-          {cols.map((col,i)=><div key={col.key} style={{background:"#F8F0FF",border:"1px solid #E0D0FF",borderRadius:8,padding:"10px 12px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:13,color:"#1a1a2e",flex:1}}>{col.label}</span>
-            <div style={{display:"flex",gap:4}}>
-              <button onClick={()=>moveUp(i)} disabled={i===0} style={{background:"none",border:"1px solid #E0D0FF",borderRadius:4,padding:"4px 6px",cursor:i===0?"default":"pointer",opacity:i===0?.3:1,fontSize:12}}>↑</button>
-              <button onClick={()=>moveDown(i)} disabled={i===cols.length-1} style={{background:"none",border:"1px solid #E0D0FF",borderRadius:4,padding:"4px 6px",cursor:i===cols.length-1?"default":"pointer",opacity:i===cols.length-1?.3:1,fontSize:12}}>↓</button>
-              <button onClick={()=>toggleCol(col.key)} style={{background:"none",border:"1px solid #E1306C",borderRadius:4,padding:"4px 8px",cursor:"pointer",color:"#E1306C",fontSize:12,fontWeight:600}}>✕</button>
-            </div>
+          <span style={{fontSize:12,fontWeight:700,color:"#888",display:"block",marginBottom:10}}>Colonnes actives</span>
+          {cols.map((col,i)=><div key={col.key+i} style={{background:"#F8F0FF",border:"1px solid #E0D0FF",borderRadius:8,padding:"8px 12px",marginBottom:6,display:"flex",alignItems:"center",gap:8}}>
+            {editIdx===i
+              ? <div style={{flex:1,display:"flex",gap:6,alignItems:"center"}}>
+                  <input value={editLabel} onChange={e=>setEditLabel(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveEdit()} autoFocus style={{...ci,flex:1,fontSize:13,padding:"4px 8px"}}/>
+                  <button onClick={saveEdit} style={{background:"#27AE60",border:"none",borderRadius:4,padding:"4px 10px",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>OK</button>
+                  <button onClick={()=>setEditIdx(-1)} style={{background:"none",border:"1px solid #E0D0FF",borderRadius:4,padding:"4px 8px",color:"#888",fontSize:11,cursor:"pointer"}}>Annuler</button>
+                </div>
+              : <>
+                  <span style={{flex:1,fontSize:13,color:"#1a1a2e"}}>{col.label}</span>
+                  <span style={{fontSize:10,color:"#aaa",background:"#F0F0FA",padding:"2px 6px",borderRadius:4}}>{(COLUMN_TYPES.find(t=>t.value===col.type)||{label:"Texte"}).label}</span>
+                </>
+            }
+            {editIdx!==i&&<div style={{display:"flex",gap:3}}>
+              <button onClick={()=>startEdit(i)} title="Renommer" style={{background:"none",border:"1px solid #E0D0FF",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11,color:"#833AB4"}}>✏️</button>
+              <button onClick={()=>moveUp(i)} disabled={i===0} style={{background:"none",border:"1px solid #E0D0FF",borderRadius:4,padding:"3px 6px",cursor:i===0?"default":"pointer",opacity:i===0?.3:1,fontSize:11}}>↑</button>
+              <button onClick={()=>moveDown(i)} disabled={i===cols.length-1} style={{background:"none",border:"1px solid #E0D0FF",borderRadius:4,padding:"3px 6px",cursor:i===cols.length-1?"default":"pointer",opacity:i===cols.length-1?.3:1,fontSize:11}}>↓</button>
+              <button onClick={()=>removeCol(i)} title="Supprimer" style={{background:"none",border:"1px solid #E1306C",borderRadius:4,padding:"3px 7px",cursor:"pointer",color:"#E1306C",fontSize:11,fontWeight:600}}>✕</button>
+            </div>}
           </div>)}
         </div>
-        <div>
+
+        {/* Add from predefined */}
+        {availableDefs.length>0&&<div style={{marginBottom:16}}>
           <span style={{fontSize:12,fontWeight:700,color:"#888",display:"block",marginBottom:10}}>Colonnes disponibles</span>
-          {(ALL_COLUMN_DEFS||COLUMNS_DEF).filter(d=>!cols.some(x=>x.key===d.key)).map(col=><div key={col.key} style={{background:"#FAFAFF",border:"1px solid #E8E8F0",borderRadius:8,padding:"10px 12px",marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:13,color:"#888",flex:1}}>{col.label}</span>
-            <button onClick={()=>toggleCol(col.key)} style={{background:IG_GRADIENT,border:"none",borderRadius:4,padding:"4px 10px",cursor:"pointer",color:"#fff",fontSize:12,fontWeight:600,fontFamily:"inherit"}}>+ Ajouter</button>
+          {availableDefs.map(col=><div key={col.key} style={{background:"#FAFAFF",border:"1px solid #E8E8F0",borderRadius:8,padding:"8px 12px",marginBottom:5,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:13,color:"#888",flex:1}}>{col.label} <span style={{fontSize:10,color:"#bbb"}}>({(COLUMN_TYPES.find(t=>t.value===col.type)||{label:"Texte"}).label})</span></span>
+            <button onClick={()=>addCol({...col})} style={{background:IG_GRADIENT,border:"none",borderRadius:4,padding:"4px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>+ Ajouter</button>
           </div>)}
+        </div>}
+
+        {/* Add custom column */}
+        <div style={{borderTop:"1px solid #F0F0F8",paddingTop:14}}>
+          {!showNew
+            ? <button onClick={()=>setShowNew(true)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"10px 14px",borderRadius:8,border:"2px dashed #D0AEFF",background:"transparent",color:"#833AB4",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ Créer une colonne personnalisée</button>
+            : <div style={{background:"#F8F0FF",border:"1px solid #E0D0FF",borderRadius:10,padding:14}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#833AB4",marginBottom:10}}>Nouvelle colonne</div>
+                <div style={{display:"flex",gap:8,marginBottom:10}}>
+                  <input value={newLabel} onChange={e=>setNewLabel(e.target.value)} placeholder="Nom de la colonne" onKeyDown={e=>e.key==="Enter"&&addCustomCol()} autoFocus style={{...ci,flex:1,fontSize:13}}/>
+                  <select value={newType} onChange={e=>setNewType(e.target.value)} style={{...ci,width:140,fontSize:12}}>
+                    {COLUMN_TYPES.filter(t=>t.value!=="avatar").map(t=><option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+                  <button onClick={()=>{setShowNew(false);setNewLabel("");}} style={{padding:"6px 14px",borderRadius:6,border:"1px solid #E0D0FF",background:"transparent",color:"#888",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Annuler</button>
+                  <button onClick={addCustomCol} disabled={!newLabel.trim()} style={{padding:"6px 16px",borderRadius:6,border:"none",background:newLabel.trim()?IG_GRADIENT:"#ddd",color:"#fff",fontSize:12,fontWeight:700,cursor:newLabel.trim()?"pointer":"default",fontFamily:"inherit"}}>Ajouter</button>
+                </div>
+              </div>
+          }
         </div>
       </div>
       <div style={{padding:"16px 24px 20px",display:"flex",justifyContent:"flex-end",gap:10,borderTop:"1px solid #F0F0F8"}}>
@@ -1036,7 +1165,7 @@ export default function Home() {
 
   const sections = store.data?.sections || DEFAULT_SECTIONS;
   const themes = store.data?.themes || DEFAULT_THEMES;
-  const sectionColumns = store.data?.sectionColumns || DEFAULT_SECTION_COLUMNS;
+  const columnsConfig = store.data?.sectionColumns || DEFAULT_SECTION_COLUMNS;
   const rows = store.data?.rows || {};
   const sectionTemplates = store.data?.sectionTemplates || DEFAULT_SECTION_TEMPLATES;
   const themeTemplates = store.data?.themeTemplates || {};
@@ -1081,10 +1210,22 @@ export default function Home() {
   const secObj = sections.find(s => s.id === section);
   const activeTemplate = themeTemplates[activeId] || sectionTemplates[section] || "";
   
-  // Columns for current section
+  // Columns for current section — supports old (key arrays) and new (object arrays) formats
   const getColumnsForSection = () => {
-    if (section && secObj?.columns && secObj.columns.length > 0) return secObj.columns;
-    return DEFAULT_SECTION_COLUMNS || COLUMNS_DEF;
+    // 1. If section object has columns stored directly, use them
+    if (secObj?.columns && secObj.columns.length > 0) {
+      return secObj.columns.map(c => {
+        if (typeof c === "string") return ALL_COLUMN_DEFS.find(d=>d.key===c) || {key:c,label:c,w:150,type:"text"};
+        return { ...c, type: c.type || "text" };
+      });
+    }
+    // 2. Fall back to columnsConfig (stored sectionColumns)
+    const raw = columnsConfig?.[section] || DEFAULT_SECTION_COLUMNS[section] || DEFAULT_SECTION_COLUMNS.portage;
+    if (!raw || !raw.length) return ALL_COLUMN_DEFS;
+    return raw.map(c => {
+      if (typeof c === "string") return ALL_COLUMN_DEFS.find(d=>d.key===c) || {key:c,label:c,w:150,type:"text"};
+      return { ...c, type: c.type || "text" };
+    });
   };
   const sectionColumns = getColumnsForSection();
 
@@ -1204,10 +1345,6 @@ export default function Home() {
       <span style={{color:"#888",fontSize:14}}>Chargement...</span>
     </div>
   </div>;
-
-  const COLUMNS_DEF = (sectionColumns[section] || DEFAULT_SECTION_COLUMNS[section] || [])
-    .map(k => ALL_COLUMN_DEFS.find(c => c.key === k))
-    .filter(Boolean);
 
   return <>
     <Head>
@@ -1379,7 +1516,7 @@ export default function Home() {
 
       <EditSectionModal open={!!editSection} onClose={()=>setEditSection(null)} onSave={s=>{ updateSection(s); setEditSection(null); }} section={editSection} defaultAccent={editSection?.accent}/>
 
-      <ColumnsConfigModal open={!!editColumns} onClose={()=>setEditColumns(null)} onSave={s=>{ updateSection(s); setEditColumns(null); }} section={editColumns} allColumns={ALL_COLUMN_DEFS||COLUMNS_DEF}/>
+      <ColumnsConfigModal open={!!editColumns} onClose={()=>setEditColumns(null)} onSave={s=>{ updateSection(s); setEditColumns(null); }} section={editColumns} allColumns={ALL_COLUMN_DEFS}/>
 
       <EditThemeModal open={!!editTheme} onClose={()=>setEditTheme(null)} onSave={t=>{ if(editTheme.section){updateTheme(editTheme.section,editTheme.id,t);setEditTheme(null);} }} onDelete={()=>{if(editTheme?.id&&editTheme?.section){removeTheme(editTheme.id,editTheme.section);}}} theme={editTheme} defaultAccent={editTheme?.accent}/>
 
