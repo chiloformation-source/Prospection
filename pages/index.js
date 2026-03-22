@@ -697,23 +697,39 @@ function MailPanel({ contact, themeLabel, sectionLabel, accent, template, onClos
   const generateMail=async()=>{
     setLoading(true); setError(""); setBody(""); setSubject("");
     try {
-      const templateInfo=template?`\n\nTemplate de mail à suivre comme base :\n---\n${template}\n---`:"";
-      const prompt=`Tu es un expert en prospection. Rédige un mail personnalisé pour cet influenceur :
-- Nom : ${contact.nom||"Non renseigné"}
-- Pseudo : ${contact.pseudo||"Non renseigné"}
+      const templateInfo=template?`\n\nTemplate de mail à suivre comme base (adapte-le, ne le copie pas tel quel) :\n---\n${template}\n---`:"";
+      const allLinks=[...(contact.site||[]),...(contact.youtube||[]),...(contact.instagram||[]),...(contact.autres||[])].filter(l=>l&&l.startsWith("http"));
+      const prompt=`Tu es un expert en prospection B2B. Tu dois rédiger un mail ULTRA PERSONNALISÉ pour ce prospect.
+
+IMPORTANT : Le serveur va scraper les sites/réseaux du prospect et t'envoyer le contenu. UTILISE ces informations concrètes (sujets de vidéos, articles, produits, bio, etc.) pour personnaliser le mail. Cite des éléments SPÉCIFIQUES de son contenu.
+
+=== INFORMATIONS DU PROSPECT ===
+- Nom/Prénom : ${contact.nom||"Non renseigné"}
+- Pseudo réseaux : ${contact.pseudo||"Non renseigné"}
 - Thématique : ${themeLabel}
-- Sous-thématique : ${contact.specialisation||"Non renseignée"}
-- Section : ${sectionLabel}
+- Spécialisation : ${contact.specialisation||"Non renseignée"}
+- Section de prospection : ${sectionLabel}
 - Site web : ${(contact.site||[]).filter(Boolean).join(", ")||"Non renseigné"}
 - YouTube : ${(contact.youtube||[]).filter(Boolean).join(", ")||"Non renseigné"}
 - Instagram : ${(contact.instagram||[]).filter(Boolean).join(", ")||"Non renseigné"}
-- Autres : ${(contact.autres||[]).filter(Boolean).join(", ")||"Non renseigné"}
-- Notes : ${contact.echange||"Aucune"}
+- Autres réseaux : ${(contact.autres||[]).filter(Boolean).join(", ")||"Non renseigné"}
+- E-mail : ${contact.mail||"Non renseigné"}
+- Notes d'échange : ${contact.echange||"Aucune"}
 - Commentaire : ${contact.commentaire||"Aucun"}
+
+=== EXPÉDITEUR ===
+- Nom : Chilo
+- Entreprise : Creatly
 ${templateInfo}
-Personnalise le mail. Remplace {nom}, {pseudo}, {thematique}, {section} et les [PLACEHOLDERS]. Concis, pro, chaleureux.
-Réponds UNIQUEMENT en JSON sans backticks : {"subject": "objet", "body": "corps"}`;
-      const res=await fetch("/api/generate-mail",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
+
+=== CONSIGNES ===
+- Personnalise avec des éléments CONCRETS trouvés sur les sites/réseaux du prospect
+- Mentionne un contenu spécifique (vidéo, article, post) qui t'a interpellé
+- Ton professionnel mais chaleureux, pas de formules génériques
+- Mail court (max 150 mots)
+- Signe "Chilo" (pas de nom inventé)
+- Réponds UNIQUEMENT en JSON : {"subject": "objet du mail", "body": "corps du mail"}`;
+      const res=await fetch("/api/generate-mail",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt, links:allLinks})});
       const data=await res.json();
       if(!res.ok) throw new Error(data.error);
       setSubject(data.subject||""); setBody(data.body||"");
