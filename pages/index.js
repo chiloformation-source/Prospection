@@ -34,6 +34,32 @@ const DEFAULT_SECTION_TEMPLATES = {
   closer: "Bonjour {nom},\n\nJe vous contacte pour une opportunité.\n\n[Personnalisez ce template]",
 };
 
+const ALL_COLUMN_DEFS = [
+  { key:"avatar", label:"Photo", w:60 },
+  { key:"nom", label:"Nom Prénom", w:155 },
+  { key:"pseudo", label:"Nom Réseaux", w:130 },
+  { key:"specialisation", label:"Spécialisation", w:160 },
+  { key:"score", label:"Score", w:140 },
+  { key:"site", label:"Site Web", w:190 },
+  { key:"youtube", label:"YouTube", w:190 },
+  { key:"instagram", label:"Instagram", w:180 },
+  { key:"autres", label:"Autres Réseaux", w:190 },
+  { key:"mail", label:"E-mail", w:185 },
+  { key:"numero", label:"Numéro", w:130 },
+  { key:"contacte", label:"Contacté", w:128 },
+  { key:"echange", label:"Échange", w:220 },
+  { key:"commentaire", label:"Commentaire", w:230 },
+];
+
+const DEFAULT_SECTION_COLUMNS = {
+  portage: ["avatar","nom","pseudo","specialisation","score","site","youtube","instagram","autres","mail","numero","contacte","echange","commentaire"],
+  apporteur: ["avatar","nom","pseudo","specialisation","score","site","mail","numero","contacte","commentaire"],
+  agency: ["avatar","nom","pseudo","specialisation","score","site","instagram","mail","numero","contacte","commentaire"],
+  school: ["avatar","nom","pseudo","specialisation","score","site","mail","contacte","commentaire"],
+  closer: ["avatar","nom","pseudo","specialisation","score","site","mail","numero","contacte","echange","commentaire"],
+};
+
+
 const IG_GRADIENT = "linear-gradient(135deg,#405DE6 0%,#833AB4 25%,#C13584 50%,#E1306C 70%,#F56040 85%,#FCAF45 100%)";
 const IG_GRADIENT_SOFT = "linear-gradient(135deg,#405DE608 0%,#833AB408 25%,#C1358408 50%,#E1306C08 70%,#F5604008 85%,#FCAF4508 100%)";
 
@@ -324,32 +350,25 @@ function DupBadge() {
 }
 
 /* ═══════════ TABLE ROW ═══════════ */
-function TableRow({ c, onUpdate, onDelete, onMail, onOpenFiche, accent, idx, isDup }) {
+function TableRow({ c, onUpdate, onDelete, onMail, onOpenFiche, accent, idx, isDup, columns }) {
   const [h,setH]=useState(false);
   const up=(k,v)=>onUpdate({...c,[k]:v});
   const bg=h?"#F8F0FF":idx%2===0?"#FFFFFF":"#FAFAFA";
   return <tr onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} style={{background:bg,transition:"background .12s"}}>
-    <td style={{...td0,width:56,paddingLeft:8}}>
-      <AvatarCell value={c.avatar||""} onChange={v=>up("avatar",v)} nom={c.nom} pseudo={c.pseudo}/>
-    </td>
-    <td style={td0}>
-      <div style={{display:"flex",flexDirection:"column",gap:4}}>
-        <input value={c.nom||""} onChange={e=>up("nom",e.target.value)} placeholder="Nom Prénom" style={{...ci,fontSize:13}} onFocus={focB} onBlur={bluB}/>
-        {isDup&&<DupBadge/>}
-      </div>
-    </td>
-    <td style={td0}><input value={c.pseudo||""} onChange={e=>up("pseudo",e.target.value)} placeholder="@pseudo" style={ci} onFocus={focB} onBlur={bluB}/></td>
-    <td style={td0}><textarea value={c.specialisation||""} onChange={e=>up("specialisation",e.target.value)} placeholder="Spécialisation..." rows={2} style={{...ci,resize:"vertical",minHeight:32,lineHeight:1.4,color:"#1a1a2e",background:"#fff",border:"1px solid #E8E8F0"}} onFocus={focB} onBlur={bluB}/></td>
-    <td style={td0}><StarRating value={c.score||0} onChange={v=>up("score",v)}/></td>
-    <td style={td0}><LinkCell links={c.site} onChange={v=>up("site",v)} ph="https://site.com" accent={accent}/></td>
-    <td style={td0}><LinkCell links={c.youtube} onChange={v=>up("youtube",v)} ph="https://youtube.com/@..." accent="#FF0000"/></td>
-    <td style={td0}><LinkCell links={c.instagram} onChange={v=>up("instagram",v)} ph="https://instagram.com/..." accent="#E1306C"/></td>
-    <td style={td0}><LinkCell links={c.autres} onChange={v=>up("autres",v)} ph="TikTok, LinkedIn..." accent="#405DE6"/></td>
-    <td style={td0}><input value={c.mail||""} onChange={e=>up("mail",e.target.value)} placeholder="email@..." style={{...ci,color:c.mail?"#405DE6":"#1a1a2e"}} onFocus={focB} onBlur={bluB}/></td>
-    <td style={td0}><input value={c.numero||""} onChange={e=>up("numero",e.target.value)} placeholder="+33..." style={ci} onFocus={focB} onBlur={bluB}/></td>
-    <td style={{...td0,textAlign:"center"}}><StatusBadge value={c.contacte||"Non"} onChange={v=>up("contacte",v)}/></td>
-    <td style={td0}><textarea value={c.echange||""} onChange={e=>up("echange",e.target.value)} placeholder="Notes..." rows={2} style={{...ci,resize:"vertical",minHeight:32,lineHeight:1.4}} onFocus={focB} onBlur={bluB}/></td>
-    <td style={td0}><textarea value={c.commentaire||""} onChange={e=>up("commentaire",e.target.value)} placeholder="Commentaire..." rows={2} style={{...ci,resize:"vertical",minHeight:32,lineHeight:1.4}} onFocus={focB} onBlur={bluB}/></td>
+    {columns.map(col=>{
+      const key = col.key;
+      const value = c[key];
+      if(key === "avatar") return <td key={key} style={{...td0,width:56,paddingLeft:8}}><AvatarCell value={value||""} onChange={v=>up(key,v)} nom={c.nom} pseudo={c.pseudo}/></td>;
+      if(key === "specialisation" || key === "echange" || key === "commentaire") return <td key={key} style={td0}><textarea value={value||""} onChange={e=>up(key,e.target.value)} placeholder={col.label} rows={2} style={{...ci,resize:"vertical",minHeight:32,lineHeight:1.4}} onFocus={focB} onBlur={bluB}/></td>;
+      if(key === "score") return <td key={key} style={td0}><StarRating value={value||0} onChange={v=>up(key,v)}/></td>;
+      if(key === "site" || key === "youtube" || key === "instagram" || key === "autres") {
+        const ph = key === "site" ? "https://site.com" : key === "youtube" ? "https://youtube.com/@..." : key === "instagram" ? "https://instagram.com/..." : "TikTok, LinkedIn...";
+        const color = key === "youtube" ? "#FF0000" : key === "instagram" ? "#E1306C" : "#405DE6";
+        return <td key={key} style={td0}><LinkCell links={value||[""]} onChange={v=>up(key,v)} ph={ph} accent={color}/></td>;
+      }
+      if(key === "contacte") return <td key={key} style={{...td0,textAlign:"center"}}><StatusBadge value={value||"Non"} onChange={v=>up(key,v)}/></td>;
+      return <td key={key} style={td0}><input value={value||""} onChange={e=>up(key,e.target.value)} placeholder={col.label} style={{...ci,color:key === "mail" ? (value ? "#405DE6" : "#1a1a2e") : "#1a1a2e"}} onFocus={focB} onBlur={bluB}/></td>;
+    })}
     <td style={{...td0,textAlign:"center"}}>
       <div style={{display:"flex",gap:2,justifyContent:"center",opacity:h?1:0,transition:"opacity .15s"}}>
         <button onClick={()=>onOpenFiche(c)} title="Fiche détaillée" style={{background:"none",border:"none",cursor:"pointer",fontSize:15,padding:4}}>👤</button>
@@ -359,7 +378,6 @@ function TableRow({ c, onUpdate, onDelete, onMail, onOpenFiche, accent, idx, isD
     </td>
   </tr>;
 }
-
 
 
 /* ═══════════ STATS VIEW ═══════════ */
@@ -959,6 +977,7 @@ export default function Home() {
   const store = useSharedStorage("dashboard_main", {
     sections: DEFAULT_SECTIONS,
     themes: DEFAULT_THEMES,
+    sectionColumns: DEFAULT_SECTION_COLUMNS,
     rows: {},
     sectionTemplates: DEFAULT_SECTION_TEMPLATES,
     themeTemplates: {},
@@ -969,6 +988,7 @@ export default function Home() {
 
   const sections = store.data?.sections || DEFAULT_SECTIONS;
   const themes = store.data?.themes || DEFAULT_THEMES;
+  const sectionColumns = store.data?.sectionColumns || DEFAULT_SECTION_COLUMNS;
   const rows = store.data?.rows || {};
   const sectionTemplates = store.data?.sectionTemplates || DEFAULT_SECTION_TEMPLATES;
   const themeTemplates = store.data?.themeTemplates || {};
@@ -1011,6 +1031,13 @@ export default function Home() {
   const curRows = activeId ? (rows[activeId] || []) : [];
   const secObj = sections.find(s => s.id === section);
   const activeTemplate = themeTemplates[activeId] || sectionTemplates[section] || "";
+  
+  // Columns for current section
+  const getColumnsForSection = () => {
+    if (section && secObj?.columns && secObj.columns.length > 0) return secObj.columns;
+    return DEFAULT_SECTION_COLUMNS || COLUMNS_DEF;
+  };
+  const sectionColumns = getColumnsForSection();
 
   // Détection doublons (dans toutes les lignes de la thématique active)
   const isDupFn = useCallback((row) => isDuplicate(curRows, row, curRows), [curRows]);
@@ -1129,15 +1156,9 @@ export default function Home() {
     </div>
   </div>;
 
-  const COLUMNS_DEF = [
-    { key:"avatar", label:"Photo", w:60 }, { key:"nom", label:"Nom Prénom", w:155 }, { key:"pseudo", label:"Nom Réseaux", w:130 },
-    { key:"specialisation", label:"Spécialisation", w:160 }, { key:"score", label:"Score", w:140 },
-    { key:"site", label:"Site Web", w:190 }, { key:"youtube", label:"YouTube", w:190 },
-    { key:"instagram", label:"Instagram", w:180 }, { key:"autres", label:"Autres Réseaux", w:190 },
-    { key:"mail", label:"E-mail", w:185 }, { key:"numero", label:"Numéro", w:130 },
-    { key:"contacte", label:"Contacté", w:128 }, { key:"echange", label:"Échange", w:220 },
-    { key:"commentaire", label:"Commentaire", w:230 },
-  ];
+  const COLUMNS_DEF = (sectionColumns[section] || DEFAULT_SECTION_COLUMNS[section] || [])
+    .map(k => ALL_COLUMN_DEFS.find(c => c.key === k))
+    .filter(Boolean);
 
   return <>
     <Head>
@@ -1270,11 +1291,11 @@ export default function Home() {
                 ?<div style={{padding:"60px 20px",textAlign:"center",color:"#aaa"}}>Aucun résultat</div>
                 :<table>
                   <thead><tr>
-                    {COLUMNS_DEF.map(col=><th key={col.key} style={{position:"sticky",top:0,zIndex:10,padding:"8px 7px",fontSize:9,fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:1,textAlign:"left",background:"#F8F8FF",borderBottom:"2px solid #EEEEF8",minWidth:col.w,whiteSpace:"nowrap"}}>{col.label}</th>)}
+                    {sectionColumns.map(col=><th key={col.key} style={{position:"sticky",top:0,zIndex:10,padding:"8px 7px",fontSize:9,fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:1,textAlign:"left",background:"#F8F8FF",borderBottom:"2px solid #EEEEF8",minWidth:col.w,whiteSpace:"nowrap"}}>{col.label}</th>)}
                     <th style={{position:"sticky",top:0,zIndex:10,padding:"8px 7px",background:"#F8F8FF",borderBottom:"2px solid #EEEEF8",width:80,textAlign:"center",fontSize:9,fontWeight:700,color:"#aaa"}}>Actions</th>
                   </tr></thead>
                   <tbody>
-                    {filtered.map((c,i)=><TableRow key={c._id} c={c} onUpdate={updateRow} onDelete={deleteRow} onMail={setMailContact} onOpenFiche={setFicheContact} accent={curTheme?.accent||"#833AB4"} idx={i} isDup={isDupFn(c)}/>)}
+                    {filtered.map((c,i)=><TableRow key={c._id} c={c} onUpdate={updateRow} onDelete={deleteRow} onMail={setMailContact} onOpenFiche={setFicheContact} accent={curTheme?.accent||"#833AB4"} idx={i} isDup={isDupFn(c)} columns={sectionColumns}/>)}
                   </tbody>
                 </table>
           }
