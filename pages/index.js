@@ -738,6 +738,58 @@ function AddThemeModal({ open, onClose, onAdd, defaultAccent }) {
 }
 
 /* ═══════════ EDIT THEME MODAL ═══════════ */
+function EditSectionModal({ open, onClose, onSave, section, defaultAccent }) {
+  const [label,setLabel]=useState("");
+  const [icon,setIcon]=useState("");
+  const [showIcon,setShowIcon]=useState(false);
+  const [accent,setAccent]=useState(defaultAccent||"#833AB4");
+  useEffect(()=>{if(open&&section){setLabel(section.label);setIcon(section.icon||"");setShowIcon(!!section.icon);setAccent(section.accent||defaultAccent||"#833AB4");}},[open,section,defaultAccent]);
+  if(!open) return null;
+  const submit=()=>{
+    if(!label.trim()) return;
+    onSave({...section,label:label.trim(),icon:showIcon?icon:"",accent});
+    onClose();
+  };
+  return <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.3)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+    <div onClick={e=>e.stopPropagation()} style={{background:"#fff",border:"1px solid #E8E8F0",borderRadius:18,width:"min(460px,92vw)",overflow:"hidden",boxShadow:"0 24px 80px rgba(131,58,180,.2)"}}>
+      <div style={{padding:"20px 24px 14px",borderBottom:"1px solid #F0F0F8",display:"flex",justifyContent:"space-between",background:IG_GRADIENT_SOFT}}>
+        <span style={{fontSize:17,fontWeight:800,color:"#1a1a2e"}}>Modifier la section</span>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"#aaa",fontSize:22,cursor:"pointer"}}>×</button>
+      </div>
+      <div style={{padding:"18px 24px 8px",display:"flex",flexDirection:"column",gap:14}}>
+        <label style={{display:"flex",flexDirection:"column",gap:5}}>
+          <span style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Nom</span>
+          <input value={label} onChange={e=>setLabel(e.target.value)} autoFocus style={{background:"#FAFAFF",border:"1px solid #E0D0FF",borderRadius:8,padding:"10px 14px",fontSize:14,color:"#1a1a2e",outline:"none",fontFamily:"inherit"}} onKeyDown={e=>e.key==="Enter"&&submit()}/>
+        </label>
+
+        {/* Toggle emoji - optionnel */}
+        <div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:showIcon?10:0}}>
+            <span style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Icône (optionnel)</span>
+            <button onClick={()=>setShowIcon(p=>!p)} style={{background:showIcon?IG_GRADIENT:"#F5F5FA",border:"none",borderRadius:20,padding:"4px 14px",fontSize:12,fontWeight:700,color:showIcon?"#fff":"#888",cursor:"pointer",fontFamily:"inherit",transition:"all .15s"}}>
+              {showIcon?"✓ Activée":"Ajouter un emoji"}
+            </button>
+          </div>
+          {showIcon&&<div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+            {ICON_PALETTE.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{width:36,height:36,borderRadius:8,border:icon===ic?`2px solid ${accent}`:"2px solid transparent",background:icon===ic?`${accent}20`:"#F5F5FA",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{ic}</button>)}
+          </div>}
+        </div>
+        {/* Couleur */}
+        <div>
+          <span style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",display:"block",marginBottom:8}}>Couleur</span>
+          <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+            {ACCENT_PALETTE.map(c=><button key={c} onClick={()=>setAccent(c)} style={{width:28,height:28,borderRadius:"50%",border:accent===c?"3px solid #1a1a2e":"3px solid transparent",background:c,cursor:"pointer"}}/>)}
+          </div>
+        </div>
+      </div>
+      <div style={{padding:"16px 24px 20px",display:"flex",justifyContent:"flex-end",gap:10}}>
+        <button onClick={onClose} style={{padding:"9px 20px",borderRadius:8,border:"1px solid #E0D0FF",background:"transparent",color:"#888",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Annuler</button>
+        <button onClick={submit} disabled={!label.trim()} style={{padding:"9px 24px",borderRadius:8,border:"none",background:label.trim()?IG_GRADIENT:"#ddd",color:"#fff",fontSize:13,fontWeight:700,cursor:label.trim()?"pointer":"default",fontFamily:"inherit",opacity:label.trim()?1:.5}}>Enregistrer</button>
+      </div>
+    </div>
+  </div>;
+}
+
 function EditThemeModal({ open, onClose, onSave, onDelete, theme, defaultAccent }) {
   const [label,setLabel]=useState("");
   const [icon,setIcon]=useState("");
@@ -905,6 +957,7 @@ function SavedFiltersPanel({ open, onClose, filters, onSave, onLoad, onDelete, c
 /* ═══════════ MAIN APP ═══════════ */
 export default function Home() {
   const store = useSharedStorage("dashboard_main", {
+    sections: DEFAULT_SECTIONS,
     themes: DEFAULT_THEMES,
     rows: {},
     sectionTemplates: DEFAULT_SECTION_TEMPLATES,
@@ -914,6 +967,7 @@ export default function Home() {
     activityLog: [],
   });
 
+  const sections = store.data?.sections || DEFAULT_SECTIONS;
   const themes = store.data?.themes || DEFAULT_THEMES;
   const rows = store.data?.rows || {};
   const sectionTemplates = store.data?.sectionTemplates || DEFAULT_SECTION_TEMPLATES;
@@ -926,6 +980,7 @@ export default function Home() {
   const [search, setSearch] = useState(""); const [filterStatus, setFilterStatus] = useState("Tous");
   const [showAdd, setShowAdd] = useState(null); const [confirmDel, setConfirmDel] = useState(null);
   const [editTheme, setEditTheme] = useState(null);
+  const [editSection, setEditSection] = useState(null);
   const [collapsed, setCollapsed] = useState({}); const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mailContact, setMailContact] = useState(null);
   const [ficheContact, setFicheContact] = useState(null);
@@ -954,7 +1009,7 @@ export default function Home() {
   useEffect(() => { if (curTheme && curTheme.id !== tab) setTab(curTheme.id); }, [curTheme, tab]);
 
   const curRows = activeId ? (rows[activeId] || []) : [];
-  const secObj = DEFAULT_SECTIONS.find(s => s.id === section);
+  const secObj = sections.find(s => s.id === section);
   const activeTemplate = themeTemplates[activeId] || sectionTemplates[section] || "";
 
   // Détection doublons (dans toutes les lignes de la thématique active)
@@ -1018,6 +1073,11 @@ export default function Home() {
       }
     };
     store.save(newData);
+  };
+  const updateSection = (updated) => {
+    const cs = store.data?.sections || sections;
+    const updated_sections = cs.map(s => s.id === updated.id ? updated : s);
+    store.save({ ...store.data, sections: updated_sections });
   };
   const addTheme = (secId, t) => {
     const ct = store.data?.themes || DEFAULT_THEMES;
@@ -1108,7 +1168,7 @@ export default function Home() {
           <button onClick={()=>setSidebarOpen(p=>!p)} style={{background:"none",border:"none",color:"#333",cursor:"pointer",fontSize:14,padding:"4px 6px",borderRadius:6}}>{sidebarOpen?"◀":"▶"}</button>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"6px 0"}}>
-          {DEFAULT_SECTIONS.map(sec=>{
+          {sections.map(sec=>{
             const isCol=collapsed[sec.id]; const st=themes[sec.id]||[]; const isAct=section===sec.id;
             return <div key={sec.id} style={{marginBottom:1}}>
               <div style={{display:"flex",alignItems:"center"}}>
@@ -1117,7 +1177,7 @@ export default function Home() {
                   <span style={{fontSize:15}}>{sec.icon}</span>
                   {sidebarOpen&&<><span style={{flex:1,textAlign:"left"}}>{sec.label}</span><span style={{fontSize:9,opacity:.5,transform:isCol?"rotate(-90deg)":"rotate(0)",transition:"transform .15s"}}>▼</span></>}
                 </button>
-                {sidebarOpen&&isAct&&<button onClick={()=>setEditTemplate({type:"section",id:sec.id,label:sec.label,accent:sec.accent})} title="Template mail" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,padding:"4px 6px",opacity:.4,color:sec.accent}}>📝</button>}
+                {sidebarOpen&&isAct&&<><button onClick={()=>setEditTemplate({type:"section",id:sec.id,label:sec.label,accent:sec.accent})} title="Template mail" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,padding:"4px 6px",opacity:.4,color:sec.accent}}>📝</button><button onClick={()=>setEditSection(sec)} title="Modifier section" style={{background:"none",border:"none",cursor:"pointer",fontSize:10,padding:"2px 4px",opacity:.35,color:sec.accent}}>✏️</button></>}
               </div>
               {sidebarOpen&&!isCol&&<div style={{padding:"2px 0 4px 20px"}}>
                 {st.map(t=>{const active=sec.id===section&&activeId===t.id;const count=(rows[t.id]||[]).length;const hasOv=!!themeTemplates[t.id];return<div key={t.id} style={{display:"flex",alignItems:"center"}}>
@@ -1170,7 +1230,7 @@ export default function Home() {
             <button onClick={()=>setShowFilters(true)} title="Filtres sauvegardés" style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E8E8F8",background:"#fff",color:"#666",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🔖 Filtres</button>
             <button onClick={()=>setShowImport(true)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E8E8F8",background:"#fff",color:"#666",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📥 Import</button>
             <button onClick={()=>exportToCSV(curRows,curTheme?.label||"export",secObj?.label||"section")} style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E8E8F8",background:"#fff",color:"#666",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📤 Export</button>
-            <button onClick={()=>generatePDFReport(rows,themes,DEFAULT_SECTIONS,objectives)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E8E8F8",background:"#fff",color:"#666",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📄 PDF</button>
+            <button onClick={()=>generatePDFReport(rows,themes,sections,objectives)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E8E8F8",background:"#fff",color:"#666",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📄 PDF</button>
             <button onClick={addRow} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 16px",borderRadius:8,border:"none",background:IG_GRADIENT,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
               <span style={{fontSize:16}}>+</span> Nouvelle ligne
             </button>
@@ -1245,7 +1305,9 @@ export default function Home() {
         isOverride={editTemplate?.type==="theme"&&!!themeTemplates[editTemplate?.id]}
         onClearOverride={()=>{if(editTemplate){const n={...themeTemplates};delete n[editTemplate.id];update({themeTemplates:n});}}}/>
 
-      <AddThemeModal open={!!showAdd} onClose={()=>setShowAdd(null)} onAdd={t=>addTheme(showAdd,t)} defaultAccent={DEFAULT_SECTIONS.find(s=>s.id===showAdd)?.accent}/>
+      <AddThemeModal open={!!showAdd} onClose={()=>setShowAdd(null)} onAdd={t=>addTheme(showAdd,t)} defaultAccent={sections.find(s=>s.id===showAdd)?.accent}/>
+
+      <EditSectionModal open={!!editSection} onClose={()=>setEditSection(null)} onSave={s=>{ updateSection(s); setEditSection(null); }} section={editSection} defaultAccent={editSection?.accent}/>
 
       <EditThemeModal open={!!editTheme} onClose={()=>setEditTheme(null)} onSave={t=>{ if(editTheme.section){updateTheme(editTheme.section,editTheme.id,t);setEditTheme(null);} }} onDelete={()=>{if(editTheme?.id&&editTheme?.section){removeTheme(editTheme.id,editTheme.section);}}} theme={editTheme} defaultAccent={editTheme?.accent}/>
 
