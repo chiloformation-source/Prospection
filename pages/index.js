@@ -738,16 +738,16 @@ function AddThemeModal({ open, onClose, onAdd, defaultAccent }) {
 }
 
 /* ═══════════ EDIT THEME MODAL ═══════════ */
-function EditThemeModal({ open, onClose, onSave, theme, defaultAccent }) {
+function EditThemeModal({ open, onClose, onSave, onDelete, theme, defaultAccent }) {
   const [label,setLabel]=useState("");
-  const [icon,setIcon]=useState("📌");
+  const [icon,setIcon]=useState("");
   const [showIcon,setShowIcon]=useState(false);
   const [accent,setAccent]=useState(defaultAccent||"#833AB4");
-  useEffect(()=>{if(open&&theme){setLabel(theme.label);setIcon(theme.icon||"📌");setShowIcon(!!theme.icon);setAccent(theme.accent||defaultAccent||"#833AB4");}},[open,theme,defaultAccent]);
+  useEffect(()=>{if(open&&theme){setLabel(theme.label);setIcon(theme.icon||"");setShowIcon(!!theme.icon);setAccent(theme.accent||defaultAccent||"#833AB4");}},[open,theme,defaultAccent]);
   if(!open) return null;
   const submit=()=>{
     if(!label.trim()) return;
-    onSave({...theme,label:label.trim(),icon:showIcon?icon:"📋",accent});
+    onSave({...theme,label:label.trim(),icon:showIcon?icon:"",accent});
     onClose();
   };
   return <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.3)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -762,10 +762,10 @@ function EditThemeModal({ open, onClose, onSave, theme, defaultAccent }) {
           <input value={label} onChange={e=>setLabel(e.target.value)} autoFocus style={{background:"#FAFAFF",border:"1px solid #E0D0FF",borderRadius:8,padding:"10px 14px",fontSize:14,color:"#1a1a2e",outline:"none",fontFamily:"inherit"}} onKeyDown={e=>e.key==="Enter"&&submit()}/>
         </label>
 
-        {/* Toggle emoji */}
+        {/* Toggle emoji - optionnel */}
         <div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:showIcon?10:0}}>
-            <span style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Icône</span>
+            <span style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Icône (optionnel)</span>
             <button onClick={()=>setShowIcon(p=>!p)} style={{background:showIcon?IG_GRADIENT:"#F5F5FA",border:"none",borderRadius:20,padding:"4px 14px",fontSize:12,fontWeight:700,color:showIcon?"#fff":"#888",cursor:"pointer",fontFamily:"inherit",transition:"all .15s"}}>
               {showIcon?"✓ Activée":"Ajouter un emoji"}
             </button>
@@ -782,9 +782,12 @@ function EditThemeModal({ open, onClose, onSave, theme, defaultAccent }) {
           </div>
         </div>
       </div>
-      <div style={{padding:"16px 24px 20px",display:"flex",justifyContent:"flex-end",gap:10}}>
-        <button onClick={onClose} style={{padding:"9px 20px",borderRadius:8,border:"1px solid #E0D0FF",background:"transparent",color:"#888",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Annuler</button>
-        <button onClick={submit} disabled={!label.trim()} style={{padding:"9px 24px",borderRadius:8,border:"none",background:label.trim()?IG_GRADIENT:"#ddd",color:"#fff",fontSize:13,fontWeight:700,cursor:label.trim()?"pointer":"default",fontFamily:"inherit",opacity:label.trim()?1:.5}}>Enregistrer</button>
+      <div style={{padding:"16px 24px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+        <button onClick={()=>{if(onDelete){if(confirm("Êtes-vous sûr de vouloir supprimer cette thématique ? Les prospects y seront conservés mais l'onglet sera supprimé.")){onDelete();onClose();}}}} style={{padding:"9px 16px",borderRadius:8,border:"1px solid #E74C3C",background:"transparent",color:"#E74C3C",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🗑️ Supprimer</button>
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={onClose} style={{padding:"9px 20px",borderRadius:8,border:"1px solid #E0D0FF",background:"transparent",color:"#888",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Annuler</button>
+          <button onClick={submit} disabled={!label.trim()} style={{padding:"9px 24px",borderRadius:8,border:"none",background:label.trim()?IG_GRADIENT:"#ddd",color:"#fff",fontSize:13,fontWeight:700,cursor:label.trim()?"pointer":"default",fontFamily:"inherit",opacity:label.trim()?1:.5}}>Enregistrer</button>
+        </div>
       </div>
     </div>
   </div>;
@@ -1029,14 +1032,15 @@ export default function Home() {
     };
     store.save({ ...store.data, themes: updated_themes });
   };
-  const removeTheme = (id) => {
+  const removeTheme = (id, secId) => {
     const ct = store.data?.themes || DEFAULT_THEMES;
     const cr = store.data?.rows || {};
     const ctt = store.data?.themeTemplates || {};
-    const rem = (ct[section]||[]).filter(t=>t.id!==id);
+    const sectionId = secId || section;
+    const rem = (ct[sectionId]||[]).filter(t=>t.id!==id);
     const nr={...cr}; delete nr[id];
     const nt={...ctt}; delete nt[id];
-    store.save({ ...store.data, themes:{...ct,[section]:rem}, rows:nr, themeTemplates:nt });
+    store.save({ ...store.data, themes:{...ct,[sectionId]:rem}, rows:nr, themeTemplates:nt });
     if(tab===id&&rem.length>0)setTab(rem[0].id); setConfirmDel(null);
   };
   const selectTheme = (sid, tid) => { setSection(sid); setTab(tid); setSearch(""); setFilterStatus("Tous"); };
@@ -1243,7 +1247,7 @@ export default function Home() {
 
       <AddThemeModal open={!!showAdd} onClose={()=>setShowAdd(null)} onAdd={t=>addTheme(showAdd,t)} defaultAccent={DEFAULT_SECTIONS.find(s=>s.id===showAdd)?.accent}/>
 
-      <EditThemeModal open={!!editTheme} onClose={()=>setEditTheme(null)} onSave={t=>{ if(editTheme.section){updateTheme(editTheme.section,editTheme.id,t);setEditTheme(null);} }} theme={editTheme} defaultAccent={editTheme?.accent}/>
+      <EditThemeModal open={!!editTheme} onClose={()=>setEditTheme(null)} onSave={t=>{ if(editTheme.section){updateTheme(editTheme.section,editTheme.id,t);setEditTheme(null);} }} onDelete={()=>{if(editTheme?.id&&editTheme?.section){removeTheme(editTheme.id,editTheme.section);}}} theme={editTheme} defaultAccent={editTheme?.accent}/>
 
       <ImportModal open={showImport} onClose={()=>setShowImport(false)} onImport={handleImport} accent={curTheme?.accent||"#833AB4"}/>
 
