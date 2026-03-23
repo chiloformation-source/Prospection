@@ -4,6 +4,27 @@ const isValidEmail = (email) => {
   return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
+function textToHtml(text) {
+  // First escape HTML entities
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  // Then convert newlines to <br />
+  html = html.replace(/\n/g, '<br />');
+  return '<p style="font-family:Arial, sans-serif; font-size:14px; line-height:1.6; color:#333;">' + html + '</p>';
+}
+
+function bodyToHtml(body) {
+  // If the body already contains <br /> or <br> tags, use it as-is (from AI generation)
+  if (body.includes('<br') || body.includes('<p>')) {
+    // Already HTML-formatted, wrap in a styled container
+    return '<div style="font-family:Arial, sans-serif; font-size:14px; line-height:1.6; color:#333;">' + body + '</div>';
+  }
+  // Otherwise convert plain text to HTML
+  return textToHtml(body);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -27,6 +48,11 @@ export default async function handler(req, res) {
 
   const resendApiKey = process.env.RESEND_API_KEY;
 
+  // Build HTML from body
+  const htmlBody = bodyToHtml(body);
+  // Plain text version (strip HTML tags)
+  const plainText = body.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
+
   if (!smtpUser || !smtpPass) {
     if (!resendApiKey) {
       return res.status(500).json({
@@ -45,7 +71,8 @@ export default async function handler(req, res) {
           from: `${fromName} <${fromEmail}>`,
           to,
           subject,
-          text: body,
+          html: htmlBody,
+          text: plainText,
         }),
       });
 
@@ -82,11 +109,8 @@ export default async function handler(req, res) {
       from: `"${fromName}" <${fromEmail}>`,
       to,
       subject,
-      text: body,
-      html: `<p style="font-family:Arial, sans-serif; font-size:14px; line-height:1.5;">${body
-        .replace(/\n/g, '<br />')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')}</p>`,
+      text: plainText,
+      html: htmlBody,
     };
 
     const info = await transporter.sendMail(mailOptions);
