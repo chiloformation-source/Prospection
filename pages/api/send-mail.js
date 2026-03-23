@@ -1,37 +1,110 @@
+import nodemailer from 'nodemailer';
+
+const isValidEmail = (email) => {
+  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  const { to, subject, body } = req.body;
-  if (!to || !subject || !body) return res.status(400).json({ error: "Champs manquants (to, subject, body)" });
+  const { to, subject, body } = req.body || {};
+  if (!to || !subject || !body) {
+    return res.status(400).json({ error: 'Champs manquants (to, subject, body)' });
+  }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "RESEND_API_KEY not configured" });
+  if (!isValidEmail(to)) {
+    return res.status(400).json({ error: 'Adresse destinataire invalide' });
+  }
 
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        from: "Creatly <contact@creatly.fr>",
-        to: [to],
-        subject: subject,
-        text: body,
-      }),
-    });
+  const smtpHost = process.env.OVH_SMTP_HOST || 'ssl0.ovh.net';
+  const smtpPort = Number(process.env.OVH_SMTP_PORT || 465);
+  const smtpUser = process.env.OVH_SMTP_USER;
+  const smtpPass = process.env.OVH_SMTP_PASS;
+  const fromEmail = process.env.OVH_FROM_EMAIL || smtpUser || 'contact@creatly.fr';
+  const fromName = process.env.OVH_FROM_NAME || 'Creatly';
 
-    const data = await response.json();
+  const resendApiKey = process.env.RESEND_API_KEY;
 
-    if (!response.ok) {
-      console.error("Resend error:", JSON.stringify(data));
-      return res.status(response.status).json({ error: data.message || "Erreur d'envoi" });
+  if (!smtpUser || !smtpPass) {
+    if (!resendApiKey) {
+      return res.status(500).json({
+        error: 'Aucune methode d\'envoi configuree : OVH SMTP (OVH_SMTP_USER/OVH_SMTP_PASS) ou RESEND_API_KEY requis.',
+      });
     }
 
-    return res.status(200).json({ success: true, id: data.id });
-  } catch (err) {
-    console.error("Send mail error:", err);
-    return res.status(500).json({ error: "Erreur d'envoi: " + (err.message || "Réessayez") });
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${resendApiKey}`,
+        },
+        body: JSON.stringify({
+          from: `${fromName} <${fromEmail}>`,
+          to,
+          subject,
+          text: body,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        console.error('Resend error:', data);
+        return res.status(response.status).json({ error: data.error || data.message || 'Erreur Resend' });
+      }
+
+      return res.status(200).json({ success: true, id: data.id, provider: 'resend' });
+    } catch (error) {
+      console.error('Erreur Resend:', error);
+      return res.status(500).json({ error: 'Erreur d\'envoi Resend : ' + (error.message || 'Verifiez votre cle RESEND_API_KEY') });
+    }
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    await transporter.verify();
+
+    const mailOptions = {
+      from: `"${fromName}" <${fromEmail}>`,
+      to,
+      subject,
+      text: body,
+      html: `<p style="font-family:Arial, sans-serif; font-size:14px; line-height:1.5;">${body
+        .replace(/\n/g, '<br />')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')}</p>`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    return res.status(200).json({
+      success: true,
+      messageId: info.messageId,
+      response: info.response,
+      provider: 'ovh',
+    });
+  } catch (error) {
+    console.error('Erreur d\'envoi SMTP:', error);
+
+    let msg = 'Erreur d\'envoi : ' + (error.message || 'Verifiez votre configuration SMTP');
+    if (error.response) {
+      msg += ' - ' + error.response;
+    }
+
+    return res.status(500).json({ error: msg });
   }
 }
